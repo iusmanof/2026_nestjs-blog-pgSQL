@@ -1,1 +1,7 @@
-# 2026_nestjs-blog-pgSQL
+# Nestjs app blog-platform
+
+## js
+## postgresSQL
+## CQRS 
+## DDD
+## typescript
