@@ -7,6 +7,8 @@ import { DeleteUserUseCase } from './application/use-cases/delete-user.usecase';
 import { UsersQueryRepository } from './infrastructure/users.query-repository';
 import UsersRepository from './infrastructure/users.repository';
 import { CqrsModule } from '@nestjs/cqrs';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersEntity } from './domain/users.entity';
 
 const controllers = [UserController];
 const services = [CryptoService];
@@ -15,7 +17,7 @@ const useCases = [CreateUserUseCase, DeleteUserUseCase];
 const handlers = [GetUsersQueryHandler];
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, TypeOrmModule.forFeature([UsersEntity])],
   controllers: [...controllers],
   providers: [
     ...services,
@@ -24,6 +26,6 @@ const handlers = [GetUsersQueryHandler];
     ...useCases,
     ...handlers,
   ],
-  exports: [],
+  exports: [UsersRepository],
 })
 export class UserAccountsModule {}

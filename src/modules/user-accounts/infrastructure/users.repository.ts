@@ -1,23 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { UserDbType } from '../domain/user-db.type';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { UsersEntity } from '../domain/users.entity';
 
 @Injectable()
 class UsersRepository {
-  constructor() {
-    // @InjectModel(User.name)
-    // private readonly userModel: UserModelType,
+  constructor(
+    @InjectDataSource()
+    protected dataSource: DataSource,
+  ) {}
+
+  async create(dto: UserDbType) {
+    const query = `INSERT INTO "Users"(login, email, "passwordHash")
+                   VALUES ( $1, $2, $3 ) 
+                   RETURNING *;`;
+    const values = [dto.login, dto.email, dto.passwordHash];
+    const result: UsersEntity[] = await this.dataSource.query(query, values);
+    return result[0];
   }
 
-  create(dto: UserDbType) {
-    console.log(dto);
+  async delete(id: string): Promise<boolean> {
+    const query = `
+          DELETE FROM "Users"
+          WHERE id = $1
+              RETURNING id;
+      `;
+
+    const result: { id: number }[] = await this.dataSource.query(query, [id]);
+
+    return result.length > 0;
   }
 
-  delete(id: string): boolean {
-    console.log(id);
-    return true;
+  async deleteAll() {
+    const query = `DELETE FROM  "Users"`;
+    await this.dataSource.query(query);
   }
-
-  async deleteAll() {}
 
   async save() {}
 

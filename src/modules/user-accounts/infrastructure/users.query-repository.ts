@@ -1,18 +1,63 @@
 import { Injectable } from '@nestjs/common';
-import { UsersQueryParamsDto } from '../api/dto/users-query-params.dto';
+import { UsersQueryParamsDto, UsersSortBy } from '../api/dto/users-query-params.dto';
+import { SortDirection } from '../../../core/dto/base.query-params.dto';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { UserViewDto } from '../api/dto/user-view.dto';
 // import { UserPaginatedViewDto } from '../api/dto/user-paginated.view.dto';
 // import { UserViewDto } from '../api/dto/user-view.dto';
 // import { SortDirection } from '../../../core/dto/base.query-params.dto';
 
 @Injectable()
 export class UsersQueryRepository {
-  constructor() {
-    // @InjectModel(User.name)
-    // private readonly userModel: Model<UserDocument>,
-  }
+  constructor(
+    @InjectDataSource()
+    protected dataSource: DataSource,
+  ) {}
 
-  getAll(query: UsersQueryParamsDto) {
-    console.log(query);
+  async getAll(query: UsersQueryParamsDto) {
+    const sortMap: Record<UsersSortBy, string> = {
+      createdAt: `"createdAt"`,
+      login: `login`,
+      email: `email`,
+    };
+
+    const sortField = sortMap[query.sortBy] ?? `"createdAt"`;
+    const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+
+    const querySql = `
+      SELECT id, login, email, "createdAt"
+      FROM "Users"
+      WHERE ($1::text IS NULL OR login = $1)
+        AND ($2::text IS NULL OR email = $2)
+      ORDER BY ${sortField} ${sortDirection}
+      OFFSET $3
+        LIMIT $4;
+    `;
+
+    const values = [
+      query.searchLoginTerm ?? null,
+      query.searchEmailTerm ?? null,
+      query.calculateSkip(),
+      query.pageSize,
+    ];
+
+    const items: UserViewDto[] = await this.dataSource.query(querySql, values);
+
+    const countSql = `
+    SELECT COUNT(*)::int AS count
+    FROM "Users"
+    WHERE ($1::text IS NULL OR login ILIKE '%' || $1 || '%')
+      AND ($2::text IS NULL OR email ILIKE '%' || $2 || '%');
+  `;
+    const result: { count: number }[] = await this.dataSource.query(countSql, [
+      query.searchLoginTerm ?? null,
+      query.searchEmailTerm ?? null,
+    ]);
+
+    const totalCount = result[0]?.count ?? 0;
+
+    return { items, totalCount };
     // const filter: any = {};
     // const orConditions: any[] = [];
     //
@@ -34,14 +79,12 @@ export class UsersQueryRepository {
     //   filter.$or = orConditions;
     // }
     //
-    // // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     // // const totalCount = await this.userModel.countDocuments(filter);
     //
     // const sortField = query.sortBy || 'createdAt';
     // const sortOrder = query.sortDirection === SortDirection.Asc ? 1 : -1;
     //
     // const users = await this.userModel
-    //   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     //   .find(filter)
     //   .sort({ [sortField]: sortOrder, _id: 1 })
     //   .skip(query.calculateSkip())
