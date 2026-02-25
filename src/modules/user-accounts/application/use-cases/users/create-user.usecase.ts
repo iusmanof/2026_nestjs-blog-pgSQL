@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { CreateUserDto } from '../../api/dto/create-user.dto';
-import { CryptoService } from '../crypto.service';
-import UsersRepository from '../../infrastructure/users.repository';
-import { UserViewDto } from '../../api/dto/user-view.dto';
+import { CreateUserDto } from '../../../api/dto/create-user.dto';
+import { CryptoService } from '../../crypto.service';
+import UsersRepository from '../../../infrastructure/users.repository';
+import { UserViewDto } from '../../../api/dto/user-view.dto';
 
 export class CreateUserCommand {
   constructor(public dto: CreateUserDto) {}

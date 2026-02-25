@@ -32,34 +32,31 @@ class UsersRepository {
     return result.length > 0;
   }
 
+  async updatePasswordHash(params: { id: number; passwordHash: string }): Promise<void> {
+    const query = `UPDATE "Users" SET passwordHash = $2 WHERE id = $1`;
+    const values = [params.id];
+    await this.dataSource.query(query, values);
+  }
+  // TODO delete if not necessary
+  async save(user: UsersEntity): Promise<UsersEntity> {
+    const query = `
+    UPDATE "Users"
+    SET
+      login = $1,
+      email = $2,
+      "passwordHash" = $3
+    WHERE id = $4
+    RETURNING *;
+  `;
+    const values = [user.login, user.email, user.passwordHash, user.id];
+    const result: UsersEntity[] = await this.dataSource.query(query, values);
+    return result[0];
+  }
+
   async deleteAll() {
     const query = `DELETE FROM  "Users"`;
     await this.dataSource.query(query);
   }
-
-  async save() {}
-
-  // create(dto: UserDbType): UserDocument {
-  //   const createDto: CreateUserDto = {
-  //     login: dto.login,
-  //     email: dto.email,
-  //     password: dto.passwordHash,
-  //   };
-  //   return this.userModel.createInstance(createDto);
-  // }
-  //
-  // async delete(id: string): Promise<boolean> {
-  //   const result = await this.userModel.deleteOne({ _id: id });
-  //   return result.deletedCount === 1;
-  // }
-  //
-  // async deleteAll() {
-  //   await this.userModel.deleteMany({});
-  // }
-  //
-  // async save(user: UserDocument) {
-  //   await user.save();
-  // }
 }
 
 export default UsersRepository;

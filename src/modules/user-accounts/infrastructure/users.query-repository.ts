@@ -4,6 +4,7 @@ import { SortDirection } from '../../../core/dto/base.query-params.dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UserViewDto } from '../api/dto/user-view.dto';
+import { UsersEntity } from '../domain/users.entity';
 // import { UserPaginatedViewDto } from '../api/dto/user-paginated.view.dto';
 // import { UserViewDto } from '../api/dto/user-view.dto';
 // import { SortDirection } from '../../../core/dto/base.query-params.dto';
@@ -100,37 +101,33 @@ export class UsersQueryRepository {
     // });
   }
 
-  findByLoginOrEmail(loginOrEmail: string) /* Promise<UserDocument | null>*/ {
+  async findByLoginOrEmail(loginOrEmail: string): Promise<UsersEntity | null> {
     console.log(loginOrEmail);
-    // return this.userModel
-    //   .findOne({
-    //     $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
-    //   })
-    //   .select('+passwordHash')
-    //   .exec();
+    const querySql = `SELECT * FROM "Users" WHERE login = $1 OR email = $1;`;
+    const result: UsersEntity[] = await this.dataSource.query(querySql, [loginOrEmail]);
+    return result[0] ?? null;
+  }
+  async findById(id: string): Promise<UsersEntity | null> {
+    const query = `SELECT * FROM "Users" WHERE id = $1`;
+    const values = [id];
+    const result: UsersEntity[] = await this.dataSource.query(query, values);
+    return result.length ? result[0] : null;
   }
 
-  findByEmail(email: string) {
-    console.log(email);
-    // return this.userModel.findOne({ email }).exec();
+  async findByEmail(email: string): Promise<UsersEntity | null> {
+    const query = `SELECT * FROM "Users" WHERE email = $1;`;
+    const values = [email];
+    const result: UsersEntity[] = await this.dataSource.query(query, values);
+    return result[0] ?? null;
   }
 
-  findById(id: string) /* Promise<UserDocument | null>*/ {
-    console.log(id);
+  // async findByRecoveryCode(code: string) {
+  //   console.log(code);
+  //   // return this.userModel.findOne({ recoveryCode: code }).exec();
+  // }
 
-    // return this.userModel.findOne({
-    //   _id: id,
-    //   deletedAt: null,
-    // });
-  }
-
-  findByRecoveryCode(code: string) {
-    console.log(code);
-    // return this.userModel.findOne({ recoveryCode: code }).exec();
-  }
-
-  findByConfirmationCode(code: string) {
-    console.log(code);
-    // return this.userModel.findOne({ 'emailConfirmation.code': code }).exec();
-  }
+  // async findByConfirmationCode(code: string) {
+  //   console.log(code);
+  //   // return this.userModel.findOne({ 'emailConfirmation.code': code }).exec();
+  // }
 }

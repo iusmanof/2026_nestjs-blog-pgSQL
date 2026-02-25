@@ -1,6 +1,4 @@
 import { IsString, Length, IsEmail } from 'class-validator';
-import { IsStringWithTrim } from '../../../../core/decorators/validation/is-string-with-trim';
-import { Trim } from '../../../../core/decorators/transform/trim';
 
 export const loginConstraints = {
   minLength: 3,
@@ -23,20 +21,5 @@ export class CreateUserDto {
 
   @IsString()
   @IsEmail()
-  email: string;
-}
-
-export class RegistrationUserInputDto {
-  @IsStringWithTrim(loginConstraints.minLength, loginConstraints.maxLength)
-  login: string;
-
-  @IsString()
-  @Length(passwordConstraints.minLength, passwordConstraints.maxLength)
-  @Trim()
-  password: string;
-
-  @IsString()
-  @IsEmail()
-  @Trim()
   email: string;
 }

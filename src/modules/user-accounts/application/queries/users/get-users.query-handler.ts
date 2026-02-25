@@ -1,8 +1,8 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { UsersQueryParamsDto } from '../../api/dto/users-query-params.dto';
-import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
-import { UserPaginatedViewDto } from '../../api/dto/user-paginated.view.dto';
-import { UserViewDto } from '../../api/dto/user-view.dto';
+import { UsersQueryParamsDto } from '../../../api/dto/users-query-params.dto';
+import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
+import { UserPaginatedViewDto } from '../../../api/dto/user-paginated.view.dto';
+import { UserViewDto } from '../../../api/dto/user-view.dto';
 
 export class GetUsersQuery {
   constructor(public queryParams: UsersQueryParamsDto) {}

@@ -8,16 +8,19 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
   // UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { CreateUserCommand } from '../../application/use-cases/create-user.usecase';
-import { DeleteUserCommand } from '../../application/use-cases/delete-user.usecase';
-import { GetUsersQuery } from '../../application/queries/get-users.query-handler';
+import { CreateUserCommand } from '../../application/use-cases/users/create-user.usecase';
+import { DeleteUserCommand } from '../../application/use-cases/users/delete-user.usecase';
+import { GetUsersQuery } from '../../application/queries/users/get-users.query-handler';
 import { UsersQueryParamsDto } from '../dto/users-query-params.dto';
+import { BasicAuthGuard } from '../../guards/basic/basic.guard';
+// import { BasicAuthGuard } from '../../guards/basic/basic-auth.guard';
 
-// @UseGuards(BasicAuthGuard)
+@UseGuards(BasicAuthGuard)
 @Controller('users')
 class UserController {
   constructor(
