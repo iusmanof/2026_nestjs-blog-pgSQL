@@ -20,19 +20,16 @@ class UsersRepository {
     return result[0];
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string): Promise<void> {
     const query = `
           DELETE FROM "Users"
-          WHERE id = $1
-              RETURNING id;
+          WHERE id = $1;
       `;
 
-    const result: { id: number }[] = await this.dataSource.query(query, [id]);
-
-    return result.length > 0;
+    await this.dataSource.query(query, [id]);
   }
 
-  async updatePasswordHash(params: { id: number; passwordHash: string }): Promise<void> {
+  async updatePasswordHash(params: { id: string; passwordHash: string }): Promise<void> {
     const query = `UPDATE "Users" SET passwordHash = $2 WHERE id = $1`;
     const values = [params.id];
     await this.dataSource.query(query, values);

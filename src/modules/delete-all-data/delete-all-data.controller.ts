@@ -9,5 +9,6 @@ export class DeleteAllDataController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async clearDatabase(): Promise<void> {
     await this.testingService.clearAll();
+    return;
   }
 }

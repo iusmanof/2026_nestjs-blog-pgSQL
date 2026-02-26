@@ -1,7 +1,7 @@
 import { UsersEntity } from '../../domain/users.entity';
 
 export class UserViewDto {
-  id: number;
+  id: string;
   login: string;
   email: string;
   createdAt: Date;

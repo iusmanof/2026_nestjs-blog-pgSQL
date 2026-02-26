@@ -18,10 +18,9 @@ import { DeleteUserCommand } from '../../application/use-cases/users/delete-user
 import { GetUsersQuery } from '../../application/queries/users/get-users.query-handler';
 import { UsersQueryParamsDto } from '../dto/users-query-params.dto';
 import { BasicAuthGuard } from '../../guards/basic/basic.guard';
-// import { BasicAuthGuard } from '../../guards/basic/basic-auth.guard';
 
 @UseGuards(BasicAuthGuard)
-@Controller('users')
+@Controller('sa/users')
 class UserController {
   constructor(
     private readonly commandBus: CommandBus,

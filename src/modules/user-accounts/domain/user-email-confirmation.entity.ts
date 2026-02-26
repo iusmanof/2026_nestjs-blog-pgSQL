@@ -1,13 +1,24 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UsersEntity } from './users.entity';
 
 @Entity({ name: 'UserEmailConfirmations' })
 export class UserEmailConfirmationEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @ManyToOne(() => UsersEntity, (user) => user.emailConfirmations, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user: UsersEntity;
+
+  @Column()
+  userId: string;
 
   @Column({ type: 'varchar', length: 255 })
   code: string;

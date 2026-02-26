@@ -4,8 +4,9 @@ import { UserEmailConfirmationEntity } from './user-email-confirmation.entity';
 
 @Entity({ name: 'Users' })
 export class UsersEntity {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  //@PrimaryGeneratedColumn()
+  id: string;
 
   @Column({ type: 'varchar', length: 10, unique: true })
   login: string;

@@ -65,6 +65,6 @@ export class RegisterUserUseCase implements ICommandHandler<RegisterUserCommand>
     //
     // await this.usersRepository.save(createdUser);
     // TODO send message
-    //await this.emailService.sendConfirmationEmail(createdUser.email, confirmCode);
+    await this.emailService.sendConfirmationEmail(command.body.email, confirmCode);
   }
 }
