@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UserDbType } from '../domain/user-db.type';
+import { UserDbType } from '../types/user-db.type';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UsersEntity } from '../domain/users.entity';

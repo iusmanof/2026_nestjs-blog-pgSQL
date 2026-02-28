@@ -38,8 +38,10 @@ import { RegistrationConfirmationUseCase } from './application/use-cases/auth/re
 import { RegistrationEmailResendingUseCase } from './application/use-cases/auth/registration-email-resending.usecase';
 import { GetDevicesQueryHandler } from './application/queries/users/get-devices.query-handler';
 import { DeleteDeviceUseCase } from './application/use-cases/auth/delete-device.command';
+import { SecurityDevicesController } from './api/controllers/security-devices.controller';
+import { DeleteAllDevicesUseCase } from './application/use-cases/auth/delete-all-devices.useacse';
 
-const controllers = [UserController, AuthController];
+const controllers = [UserController, AuthController, SecurityDevicesController];
 const services = [CryptoService, ValidateUserService, CodeGeneratorService];
 const repositories = [
   UsersQueryRepository,
@@ -60,6 +62,7 @@ const useCases = [
   RegistrationConfirmationUseCase,
   RegistrationEmailResendingUseCase,
   DeleteDeviceUseCase,
+  DeleteAllDevicesUseCase,
 ];
 const handlers = [GetUsersQueryHandler, GetUserByIdQueryHandler, GetDevicesQueryHandler];
 

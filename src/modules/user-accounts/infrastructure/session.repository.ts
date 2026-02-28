@@ -23,20 +23,41 @@ export class SessionRepository {
 
     return await this.dataSource.query(query, values);
   }
-  //
-  //   async createSession(dto: {
-  //     userId: string;
-  //     deviceId: string;
-  //     ip: string;
-  //     title: string;
-  //     refreshTokenHash: string;
-  //     lastActiveDate: Date;
-  //     expiresAt: Date;
-  //   }): Promise<SessionDocument> {
-  //     const session = new this.sessionModel({ ...dto });
-  //     return session.save();
-  //   }
-  //
+
+  async createSession(dto: {
+    userId: string;
+    deviceId: string;
+    ip: string;
+    title: string;
+    refreshTokenHash: string;
+    lastActiveDate: Date;
+    expiresAt: Date;
+  }): Promise<SessionEntity | null> {
+    const query = `INSERT INTO "Session" (
+        "userId",
+        "deviceId",
+        "ip",
+        "title",
+        "refreshTokenHash",
+        "lastActiveDate",
+        "expiresAt"
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+          RETURNING *
+      `;
+    const values = [
+      dto.userId,
+      dto.deviceId,
+      dto.ip,
+      dto.title,
+      dto.refreshTokenHash,
+      dto.lastActiveDate,
+      dto.expiresAt,
+    ];
+    const result: SessionEntity[] = await this.dataSource.query(query, values);
+    return result.length ? result[0] : null;
+  }
+
   async useRefreshToken(
     deviceId: string,
     oldRefreshToken: string,
@@ -48,7 +69,6 @@ export class SessionRepository {
     const session = await this.findByDeviceId(deviceId);
     if (!session) throw new UnauthorizedException('Session not found');
 
-    // проверяем токен
     const isValid = await bcrypt.compare(oldRefreshToken, session.refreshTokenHash);
     if (!isValid) {
       // помечаем сессию как взломанную

@@ -6,6 +6,7 @@ import { CoreConfig } from './core/core.config';
 import { BloggersPlatformModule } from './modules/bloggers-platform/bloggers-platform.module';
 import { PostgresqlDatabaseModule } from './core/database/postgresql-database.module';
 import { DeleteAllDataModule } from './modules/delete-all-data/delete-all-data.module';
+import { GlobalThrottlerModule } from './core/throttler/throttler.module';
 
 @Module({
   imports: [
@@ -15,9 +16,10 @@ import { DeleteAllDataModule } from './modules/delete-all-data/delete-all-data.m
     UserAccountsModule,
     BloggersPlatformModule,
     DeleteAllDataModule,
+    GlobalThrottlerModule,
   ],
   controllers: [],
   providers: [CoreConfig],
-  // exports: [CoreConfig] // it contain throttle
+  exports: [CoreConfig],
 })
 export class AppModule {}

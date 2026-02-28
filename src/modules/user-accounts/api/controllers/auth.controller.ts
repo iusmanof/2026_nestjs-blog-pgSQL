@@ -36,19 +36,6 @@ import { NewPasswordCommand } from '../../application/use-cases/auth/new-passwor
 import { RegistrationConfirmationCommand } from '../../application/use-cases/auth/registration-confirmation.usecase';
 import { RegistrationEmailResendingCommand } from '../../application/use-cases/auth/registration-email-resending.usecase';
 
-// import { RefreshSession } from '../../types/refresh-session.type';
-// import { RefreshSessionCommand } from '../../application/use-cases/auth/refresh-session.usecase';
-// import { LogoutCommand } from '../../application/use-cases/auth/logout.usecase';
-// import { GetUserByIdQuery } from '../../application/queries/users/get-user-by-id.query-handler';
-// import { PasswordRecoveryCommand } from '../../application/use-cases/auth/password-recovery.usecase';
-// import { JwtAuthGuard } from '../../guards/bearer/jwt-auth.guard';
-// import { MeViewDto } from '../dto/me-view.dto';
-// import { PasswordRecoveryDto } from '../dto/password-recovery.dto';
-// import { NewPasswordDto } from '../dto/new-password.dto';
-// import { NewPasswordCommand } from '../../application/use-cases/auth/new-password.usecase';
-// import { RegistrationConfirmationCommand } from '../../application/use-cases/auth/registration-confirmation.usecase';
-// import { RegistrationEmailResendingCommand } from '../../application/use-cases/auth/registration-email-resending.usecase';
-
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -74,6 +61,7 @@ export class AuthController {
 
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
+  // @Throttle({ default: { limit: 5, ttl: 10010 } })
   async registration(@Body() body: RegistrationUserInputDto): Promise<void> {
     return this.commandBus.execute(new RegisterUserCommand(body));
   }
