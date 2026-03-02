@@ -8,10 +8,10 @@ import {
 } from '../../../constants/auth-tokens.inject-constants';
 import { UserAccountsConfig } from '../../../config/user-accounts.config';
 import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
-import { SessionRepository } from '../../../infrastructure/session.repository';
+import SessionRepository from '../../../infrastructure/session.repository';
 import { RefreshSession } from '../../../types/refresh-session.type';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 
 export class RefreshSessionCommand {
   constructor(public readonly refreshToken: string) {}

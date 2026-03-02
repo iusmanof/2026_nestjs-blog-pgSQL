@@ -3,9 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Inject } from '@nestjs/common';
 import { REFRESH_TOKEN_STRATEGY_INJECT_TOKEN } from '../../../constants/auth-tokens.inject-constants';
 import { UserAccountsConfig } from '../../../config/user-accounts.config';
-import { SessionRepository } from '../../../infrastructure/session.repository';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
+import SessionRepository from '../../../infrastructure/session.repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 
 export class LogoutCommand {
   constructor(public readonly refreshToken: string) {}

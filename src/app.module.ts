@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { configModule } from './config-module';
-import { UserAccountsModule } from './modules/user-accounts/user-accounts.module';
-import { CoreModule } from './core/core.module';
-import { CoreConfig } from './core/core.config';
-import { BloggersPlatformModule } from './modules/bloggers-platform/bloggers-platform.module';
-import { PostgresqlDatabaseModule } from './core/database/postgresql-database.module';
-import { DeleteAllDataModule } from './modules/delete-all-data/delete-all-data.module';
-import { GlobalThrottlerModule } from './core/throttler/throttler.module';
+import { UserAccountsModule } from '@user-accounts/user-accounts.module';
+import { CoreModule } from '@core/core.module';
+import { CoreConfig } from '@core/core.config';
+import { BloggersPlatformModule } from '@modules/bloggers-platform/bloggers-platform.module';
+import { PostgresqlDatabaseModule } from '@core/database/postgresql-database.module';
+import { DeleteAllDataModule } from '@modules/delete-all-data/delete-all-data.module';
 
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { GlobalThrottlerModule } from './core/throttler/throttler.module';
     UserAccountsModule,
     BloggersPlatformModule,
     DeleteAllDataModule,
-    GlobalThrottlerModule,
+    // GlobalThrottlerModule,
   ],
   controllers: [],
   providers: [CoreConfig],

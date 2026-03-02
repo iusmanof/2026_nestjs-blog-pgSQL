@@ -5,7 +5,7 @@ import { DataSource } from 'typeorm';
 import { SessionEntity } from '../domain/session.entity';
 
 @Injectable()
-export class SessionRepository {
+class SessionRepository {
   constructor(
     @InjectDataSource()
     protected dataSource: DataSource,
@@ -124,3 +124,5 @@ export class SessionRepository {
     await this.dataSource.query(query);
   }
 }
+
+export default SessionRepository;

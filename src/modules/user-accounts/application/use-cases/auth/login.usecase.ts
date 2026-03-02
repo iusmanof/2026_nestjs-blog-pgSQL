@@ -9,7 +9,7 @@ import {
 import { LoginMeta } from '../../../decorators/login-meta.decarator';
 import bcrypt from 'bcrypt';
 import { RefreshTokenPayload } from '../../../types/refresh-token-payload.type';
-import { SessionRepository } from '../../../infrastructure/session.repository';
+import SessionRepository from '../../../infrastructure/session.repository';
 
 export class LoginCommand {
   constructor(

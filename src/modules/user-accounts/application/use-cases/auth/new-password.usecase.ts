@@ -3,9 +3,9 @@ import { UsersQueryRepository } from 'src/modules/user-accounts/infrastructure/u
 import { NewPasswordDto } from '../../../api/dto/new-password.dto';
 import { CryptoService } from '../../crypto.service';
 import UsersRepository from '../../../infrastructure/users.repository';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
-import { EmailConfirmationRepository } from '../../../infrastructure/email-confirmation.repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 
 export class NewPasswordCommand {
   constructor(public dto: NewPasswordDto) {}

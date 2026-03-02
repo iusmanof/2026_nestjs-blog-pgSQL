@@ -21,13 +21,13 @@ import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from './constants/auth-tokens.inject-constants';
-import { SessionRepository } from './infrastructure/session.repository';
+import SessionRepository from './infrastructure/session.repository';
+import EmailConfirmationRepository from './infrastructure/email-confirmation.repository';
 import { UserAccountsConfig } from './config/user-accounts.config';
 import { JwtService } from '@nestjs/jwt';
 import { UserEmailConfirmationEntity } from './domain/user-email-confirmation.entity';
 import { RegisterUserUseCase } from './application/use-cases/auth/register-user.usecase';
 import { CodeGeneratorService } from './application/code-generator.service';
-import { EmailConfirmationRepository } from './infrastructure/email-confirmation.repository';
 import { RefreshSessionUseCase } from './application/use-cases/auth/refresh-session.usecase';
 import { LogoutUseCase } from './application/use-cases/auth/logout.usecase';
 import { JwtStrategy } from './guards/bearer/jwt.stategy';

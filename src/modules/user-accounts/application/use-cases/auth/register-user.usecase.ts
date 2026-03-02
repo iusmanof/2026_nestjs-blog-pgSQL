@@ -3,11 +3,11 @@ import { UsersQueryRepository } from '../../../infrastructure/users.query-reposi
 import UsersRepository from '../../../infrastructure/users.repository';
 import { RegistrationUserInputDto } from '../../../api/dto/registation-user.dto';
 import { CryptoService } from '../../crypto.service';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import { CodeGeneratorService } from '../../code-generator.service';
-import { EmailService } from '../../../../notification/email.service';
-import { EmailConfirmationRepository } from '../../../infrastructure/email-confirmation.repository';
+import { EmailService } from '@modules/notification/email.service';
+import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 
 export class RegisterUserCommand {
   constructor(public body: RegistrationUserInputDto) {}
