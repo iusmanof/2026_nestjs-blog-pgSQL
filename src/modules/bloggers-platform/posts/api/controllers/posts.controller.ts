@@ -40,8 +40,8 @@ class PostsController {
   @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(@Param('id') id: string): Promise<void> {
-    return this.commandBus.execute(new DeletePostCommand(id));
+  async deletePost(@Param('id') id: string, @Param('id') blogId: string): Promise<void> {
+    return this.commandBus.execute(new DeletePostCommand(id, blogId));
   }
 
   //

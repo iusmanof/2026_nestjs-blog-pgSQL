@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString, Length } from 'class-validator';
 import { Trim } from '@core/decorators/transform/trim';
 
-export class UpdatePostDto {
+export class UpdatePostForBlogDto {
   @Trim()
   @IsString()
   @IsNotEmpty()
@@ -19,9 +19,4 @@ export class UpdatePostDto {
   @IsNotEmpty()
   @Length(1, 1000)
   content: string;
-
-  @Trim()
-  @IsString()
-  @IsNotEmpty()
-  blogId?: string;
 }

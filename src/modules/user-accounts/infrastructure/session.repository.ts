@@ -16,7 +16,7 @@ class SessionRepository {
     const result: SessionEntity[] = await this.dataSource.query(query, values);
     return result.length ? result[0] : null;
   }
-  //
+
   async findByUserId(userId: string): Promise<SessionEntity[]> {
     const query = `SELECT * FROM "Session" WHERE "userId" = $1`;
     const values = [userId];
@@ -71,7 +71,6 @@ class SessionRepository {
 
     const isValid = await bcrypt.compare(oldRefreshToken, session.refreshTokenHash);
     if (!isValid) {
-      // помечаем сессию как взломанную
       const revokeQuery = `
         UPDATE "Session"
         SET "isRevoked" = true
@@ -81,7 +80,6 @@ class SessionRepository {
       throw new UnauthorizedException('Refresh token reuse detected');
     }
 
-    // обновляем токен и даты
     const updateQuery = `
       UPDATE "Session"
       SET "refreshTokenHash" = $1,

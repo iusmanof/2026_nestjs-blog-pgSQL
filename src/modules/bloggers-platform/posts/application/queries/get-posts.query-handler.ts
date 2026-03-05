@@ -19,6 +19,21 @@ export class GetPostQueryHandler implements IQueryHandler<GetPostQuery> {
     const { items, totalCount } = await this.postsQueryRepository.getAll(query.queryParams);
 
     // items.forEach((post) => post.computeExtendedLikesInfo(query.userId));
+    //
+    // computeExtendedLikesInfo(currentUserId?: string) {
+    //   const extended = this.extendedLikesInfo;
+    //   extended.myStatus = 'None';
+    //
+    //   if (!currentUserId) return;
+    //
+    //   const reaction = extended.newestLikes.find(
+    //     (r) => r.userId === currentUserId,
+    //   );
+    //
+    //   if (reaction) {
+    //     extended.myStatus = reaction.status;
+    //   }
+    // }
 
     return PostPaginatedViewDto.mapToView({
       items: items.map(PostViewDto.mapToView),

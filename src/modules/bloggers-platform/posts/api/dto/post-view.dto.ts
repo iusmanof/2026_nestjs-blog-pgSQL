@@ -8,13 +8,14 @@ export type ExtendedLikesInfoViewDto = {
   newestLikes: NewestLikeViewDto[];
 };
 export type PostsEntityWithBlogRow = PostsEntity & { blogName: string };
-
+export type PostsEntityWithBlogRowAndExtendedLikes = PostsEntity & { blogName: string } & {
+  extendedLikesInfo: ExtendedLikesInfoViewDto;
+};
 export type NewestLikeViewDto = {
   userId: string;
   login: string;
   addedAt: Date;
 };
-
 export class PostViewDto {
   id: string;
   title: string;
@@ -23,9 +24,11 @@ export class PostViewDto {
   blogId: string;
   blogName: string;
   createdAt: Date;
-  // extendedLikesInfo: ExtendedLikesInfoViewDto;
+  extendedLikesInfo: ExtendedLikesInfoViewDto;
 
-  static mapToView = (post: PostsEntityWithBlogRow): PostViewDto => ({
+  static mapToView = (
+    post: PostsEntityWithBlogRow & { extendedLikesInfo?: ExtendedLikesInfoViewDto },
+  ): PostViewDto => ({
     id: post.id,
     title: post.title,
     shortDescription: post.shortDescription,
@@ -33,20 +36,11 @@ export class PostViewDto {
     blogId: post.blogId,
     blogName: post.blogName,
     createdAt: post.createdAt,
-    // extendedLikesInfo: {
-    //   likesCount: post.extendedLikesInfo.likesCount,
-    //   dislikesCount: post.extendedLikesInfo.dislikesCount,
-    //   myStatus: post.extendedLikesInfo.myStatus,
-    //   newestLikes: post.extendedLikesInfo.newestLikes
-    //     .filter((like) => like.status === 'Like')
-    //     .slice(0, 3)
-    //     .map(
-    //       (like): NewestLikeViewDto => ({
-    //         userId: like.userId,
-    //         login: like.login,
-    //         addedAt: like.addedAt,
-    //       }),
-    //     ),
-    // },
+    extendedLikesInfo: {
+      likesCount: post.extendedLikesInfo?.likesCount ?? 0,
+      dislikesCount: post.extendedLikesInfo?.dislikesCount ?? 0,
+      myStatus: post.extendedLikesInfo?.myStatus ?? 'None',
+      newestLikes: post.extendedLikesInfo?.newestLikes ?? [],
+    },
   });
 }

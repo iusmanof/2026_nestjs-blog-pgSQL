@@ -44,11 +44,5 @@ export class NewPasswordUseCase implements ICommandHandler<NewPasswordCommand> {
     await this.usersRepository.updatePasswordHash(params);
 
     // TODO use DDD
-    // user.passwordHash = await this.cryptoService.createPasswordHash(command.dto.newPassword);
-
-    // user.recoveryCode = undefined;
-    // user.recoveryCodeExpiration = undefined;
-
-    // await this.usersRepository.save(user);
   }
 }

@@ -21,6 +21,9 @@ import { DeletePostUseCase } from '@modules/bloggers-platform/posts/application/
 import { GetPostByIdQueryHandler } from '@modules/bloggers-platform/posts/application/queries/get-posts-by-id.query-handler';
 import PostsQueryRepository from '@modules/bloggers-platform/posts/infrastructure/posts.query-repository';
 import { GetPostQueryHandler } from '@modules/bloggers-platform/posts/application/queries/get-posts.query-handler';
+import { CreatePostForBlogUseCase } from '@modules/bloggers-platform/posts/application/use-cases/create-post-for-blog.usecase';
+import { GetPostsForBlogQueryHandler } from '@modules/bloggers-platform/posts/application/queries/get-posts-for-blog.query-handler';
+import { PostLikesEntity } from '@modules/bloggers-platform/posts/domain/post-likes.entity';
 
 const controllers = [
   BlogsController,
@@ -36,6 +39,7 @@ const useCases = [
   CreatePostUseCase,
   UpdatePostUseCase,
   DeletePostUseCase,
+  CreatePostForBlogUseCase,
 ];
 const handlers = [
   GetBlogByIdQueryHandler,
@@ -43,6 +47,7 @@ const handlers = [
   GetPostByIdQueryHandler,
   GetPostByIdQueryHandler,
   GetPostQueryHandler,
+  GetPostsForBlogQueryHandler,
 ];
 const services = [];
 
@@ -51,6 +56,7 @@ const services = [];
     CqrsModule,
     TypeOrmModule.forFeature([BlogsEntity]),
     TypeOrmModule.forFeature([PostsEntity]),
+    TypeOrmModule.forFeature([PostLikesEntity]),
   ],
   controllers: [...controllers],
   providers: [...repositories, ...useCases, ...handlers, ...services],

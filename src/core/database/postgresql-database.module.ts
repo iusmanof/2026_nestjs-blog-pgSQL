@@ -1,19 +1,26 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-// RFC вынести в ENV
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'pass',
-      database: 'pg-db',
-      autoLoadEntities: true,
-      synchronize: true,
-      logging: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: configService.get<'postgres' | 'mysql'>('DB_TYPE', 'postgres'),
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: Number(configService.get<number>('DB_PORT', 5432)),
+        username: configService.get<string>('DB_USER', 'postgres'),
+        password: configService.get<string>('DB_PASSWORD', 'pass'),
+        database: configService.get<string>('DB_NAME', 'pg-db'),
+        autoLoadEntities: true,
+        synchronize: true,
+        logging: true,
+      }),
     }),
   ],
 })
