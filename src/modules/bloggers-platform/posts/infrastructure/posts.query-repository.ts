@@ -90,9 +90,7 @@ class PostsQueryRepository {
     const result: PostsEntity[] = await this.dataSource.query(query, values);
     return result[0];
   }
-
   async getPostsForBlog(blogId: string, query: PostsQueryParamsDto, currentUserId?: string) {
-    // --- 1. Посчитаем общее количество постов ---
     const countQuery = `
             SELECT COUNT(*)::int
             FROM "Posts"
@@ -107,67 +105,38 @@ class PostsQueryRepository {
                 p.*,
                 b."name" AS "blogName",
 
-                -- количество лайков
-                (SELECT COUNT(*) FROM "PostLikes" pl WHERE pl."postId" = p.id AND pl.status = 'Like') AS "likesCount",
+                (SELECT COUNT(*) FROM "PostLikes"
+                 WHERE "postId" = p.id AND status = 'Like') AS "likesCount",
 
-                -- количество дизлайков
-                (SELECT COUNT(*) FROM "PostLikes" pl WHERE pl."postId" = p.id AND pl.status = 'Dislike') AS "dislikesCount",
+                (SELECT COUNT(*) FROM "PostLikes"
+                 WHERE "postId" = p.id AND status = 'Dislike') AS "dislikesCount",
 
-                -- статус текущего пользователя
-                (SELECT pl2.status FROM "PostLikes" pl2 WHERE pl2."postId" = p.id AND pl2."userId" = $4 LIMIT 1) AS "myStatus"
+                (SELECT status FROM "PostLikes"
+                 WHERE "postId" = p.id AND "userId" = $4
+                    LIMIT 1) AS "myStatus"
 
             FROM "Posts" p
                 LEFT JOIN "Blogs" b ON b.id = p."blogId"
+
             WHERE p."blogId" = $1
             ORDER BY "${query.sortBy}" ${query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC'}
                 LIMIT $2 OFFSET $3
         `;
 
-    const itemsRaw: any[] = await this.dataSource.query(itemsQuery, [
+    const itemsRaw = await this.dataSource.query(itemsQuery, [
       blogId,
       query.pageSize,
       query.calculateSkip(),
       currentUserId ?? null,
     ]);
 
-    const postIds = itemsRaw.map((p) => p.id);
-    let newestLikesMap = new Map<string, any[]>();
-    if (postIds.length) {
-      const newestLikesQuery = `
-      SELECT *
-      FROM (
-        SELECT
-          pl."postId",
-          pl."userId",
-          u."login",
-          pl."addedAt",
-          ROW_NUMBER() OVER (PARTITION BY pl."postId" ORDER BY pl."addedAt" DESC) AS rn
-        FROM "PostLikes" pl
-        JOIN "Users" u ON u.id = pl."userId"
-        WHERE pl."postId" = ANY($1) AND pl.status = 'Like'
-      ) t
-      WHERE t.rn <= 3
-    `;
-      const newestLikesRows: any[] = await this.dataSource.query(newestLikesQuery, [postIds]);
-
-      newestLikesMap = new Map();
-      newestLikesRows.forEach((row) => {
-        if (!newestLikesMap.has(row.postId)) newestLikesMap.set(row.postId, []);
-        newestLikesMap.get(row.postId)!.push({
-          userId: row.userId,
-          login: row.login,
-          addedAt: row.addedAt,
-        });
-      });
-    }
-
     const items = itemsRaw.map((post) => ({
       ...post,
       extendedLikesInfo: {
         likesCount: Number(post.likesCount) || 0,
         dislikesCount: Number(post.dislikesCount) || 0,
-        myStatus: post.myStatus ?? 'None',
-        newestLikes: newestLikesMap.get(post.id) ?? [],
+        myStatus: post.myStatus ?? 'None', // обработка null здесь
+        newestLikes: [],
       },
     }));
 
