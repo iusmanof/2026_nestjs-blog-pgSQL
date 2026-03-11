@@ -18,7 +18,7 @@ import type { AuthenticatedRequest } from '@user-accounts/types/authenticated-re
 import { GetPostsForBlogQuery } from '@modules/bloggers-platform/posts/application/queries/get-posts-for-blog.query-handler';
 
 @Controller('/blogs')
-class PublicBlogsController {
+class BlogsPublicController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -49,4 +49,4 @@ class PublicBlogsController {
   }
 }
 
-export default PublicBlogsController;
+export default BlogsPublicController;

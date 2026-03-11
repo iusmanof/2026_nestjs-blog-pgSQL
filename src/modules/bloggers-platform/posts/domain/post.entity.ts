@@ -1,5 +1,6 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BlogsEntity } from '@modules/bloggers-platform/blogs/domain/blogs.entity';
+import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 
 @Entity({ name: 'Posts' })
 export class PostsEntity {
@@ -24,4 +25,7 @@ export class PostsEntity {
 
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
+
+  @OneToMany(() => CommentsEntity, (comment) => comment.post)
+  comments: CommentsEntity[];
 }

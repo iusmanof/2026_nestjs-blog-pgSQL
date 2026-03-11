@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CreatePostDto } from '../dto/create-post.dto';
@@ -16,8 +17,13 @@ import { CreatePostCommand } from '@modules/bloggers-platform/posts/application/
 import { PostViewDto } from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
 import { UpdatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
 import { DeletePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/delete-post.usecase';
+import { JwtAuthGuard } from '@user-accounts/guards/bearer/jwt-auth.guard';
+import { CreateCommentDto } from '@modules/bloggers-platform/posts/api/dto/create-comment.dto';
+import type { AuthenticatedRequest } from '@user-accounts/types/authenticated-request.interface';
+import { CommentViewDto } from '@modules/bloggers-platform/posts/api/dto/comment-view.dto';
+import { CreateCommentForPostCommand } from '@modules/bloggers-platform/comments/application/use-cases/create-comment-for-post.usecase';
 
-@Controller('/sa/posts')
+@Controller('/posts')
 class PostsController {
   constructor(private readonly commandBus: CommandBus) {}
 
@@ -44,21 +50,20 @@ class PostsController {
     return this.commandBus.execute(new DeletePostCommand(id, blogId));
   }
 
-  //
-  // @UseGuards(JwtAuthGuard)
-  // @Post(':postId/comments')
-  // @HttpCode(HttpStatus.CREATED)
-  // async createCommentForPost(
-  //   @Param('postId') postId: string,
-  //   @Body() dto: CreateCommentDto,
-  //   @Req() req: AuthenticatedRequest,
-  // ): Promise<CommentViewDto> {
-  //   const userId = req.user?.id;
-  //   const login = req.user?.login;
-  //   return await this.commandBus.execute(
-  //     new CreateCommentForPostCommand(postId, userId, login, dto),
-  //   );
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Post(':postId/comments')
+  @HttpCode(HttpStatus.CREATED)
+  async createCommentForPost(
+    @Param('postId') postId: string,
+    @Body() dto: CreateCommentDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommentViewDto> {
+    const userId = req.user?.id;
+    const login = req.user?.login;
+    return await this.commandBus.execute(
+      new CreateCommentForPostCommand(postId, userId, login, dto),
+    );
+  }
 
   // @UseGuards(JwtAuthGuard)
   // @Put(':postId/like-status')

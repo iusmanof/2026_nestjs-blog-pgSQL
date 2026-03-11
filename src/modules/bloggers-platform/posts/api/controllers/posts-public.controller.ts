@@ -15,9 +15,12 @@ import { PostViewDto } from '@modules/bloggers-platform/posts/api/dto/post-view.
 import { GetPostByIdQuery } from '@modules/bloggers-platform/posts/application/queries/get-posts-by-id.query-handler';
 import { PostsQueryParamsDto } from '@modules/bloggers-platform/posts/api/dto/posts-query-params.dto';
 import { GetPostQuery } from '@modules/bloggers-platform/posts/application/queries/get-posts.query-handler';
+import { CommentsQueryParamsDto } from '@modules/bloggers-platform/posts/api/dto/comments-query-params.dto';
+import { CommentViewDto } from '@modules/bloggers-platform/posts/api/dto/comment-view.dto';
+import { GetCommentsByPostIdQuery } from '@modules/bloggers-platform/comments/application/queries/get-comments-by-post-id.query-handler';
 
 @Controller('/posts')
-class PublicPostsController {
+class PostsPublicController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -45,17 +48,17 @@ class PublicPostsController {
     return this.queryBus.execute(new GetPostQuery(query, userId));
   }
 
-  // @UseGuards(JwtOptionalAuthGuard)
-  // @Get(':postId/comments')
-  // @HttpCode(HttpStatus.OK)
-  // async getCommentForPost(
-  //   @Param('postId') postId: string,
-  //   @Req() req: AuthenticatedRequest,
-  //   @Query() query: CommentsQueryParamsDto,
-  // ): Promise<CommentViewDto> {
-  //   const userId = req.user?.id;
-  //   return await this.queryBus.execute(new GetCommentsByPostIdQuery(postId, userId, query));
-  // }
+  @UseGuards(JwtOptionalAuthGuard)
+  @Get(':postId/comments')
+  @HttpCode(HttpStatus.OK)
+  async getCommentForPost(
+    @Param('postId') postId: string,
+    @Req() req: AuthenticatedRequest,
+    @Query() query: CommentsQueryParamsDto,
+  ): Promise<CommentViewDto> {
+    const userId = req.user?.id;
+    return await this.queryBus.execute(new GetCommentsByPostIdQuery(postId, userId, query));
+  }
 }
 
-export default PublicPostsController;
+export default PostsPublicController;

@@ -3,14 +3,12 @@ import {
   Controller,
   Delete,
   Get,
-  // Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
   Put,
   Query,
-  // Query,
   UseGuards,
 } from '@nestjs/common';
 import { CreateBlogDto } from '../dto/create-blog.dto';
