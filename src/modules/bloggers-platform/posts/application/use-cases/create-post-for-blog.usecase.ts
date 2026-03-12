@@ -2,7 +2,7 @@ import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
 import { CreatePostForBlogDto } from '../../api/dto/create-post-for-blog.dto';
 import PostsRepository from '../../infrastructure/posts.repository';
 
-import { PostsEntityWithBlogRowAndExtendedLikes, PostViewDto } from '../../api/dto/post-view.dto';
+import { PostsEntityWithBlogRowAndLikesRaw, PostViewDto } from '../../api/dto/post-view.dto';
 import BlogsQueryRepository from '@modules/bloggers-platform/blogs/infrastructure/blogs.query-repository';
 
 export class CreatePostForBlogCommand {
@@ -30,6 +30,6 @@ export class CreatePostForBlogUseCase implements ICommandHandler<
       ...dto,
       blogId,
     });
-    return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndExtendedLikes);
+    return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndLikesRaw);
   }
 }

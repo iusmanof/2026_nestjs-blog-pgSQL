@@ -6,6 +6,7 @@ import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity
 import BlogQueryRepository from '@modules/bloggers-platform/blogs/infrastructure/blogs.query-repository';
 import { CreatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/create-post-for-blog.dto';
 import { UpdatePostDto } from '@modules/bloggers-platform/posts/api/dto/update-post.dto';
+import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 
 @Injectable()
 class PostsRepository {
@@ -82,8 +83,29 @@ class PostsRepository {
     return result.length > 0;
   }
 
+  async setLikeStatus(
+    userId: string,
+    postId: string,
+    login: string,
+    status: LikeStatus,
+  ): Promise<void> {
+    const query = `
+    INSERT INTO "PostLikes" ("postId","userId","status")
+    VALUES ($1,$2,$3)
+    ON CONFLICT ("postId","userId")
+    DO UPDATE SET "status" = EXCLUDED."status"
+  `;
+
+    await this.dataSource.query(query, [postId, userId, status]);
+  }
+
   async deleteAll() {
     const query = `DELETE FROM "Posts"`;
+    await this.dataSource.query(query);
+  }
+
+  async deleteAllPostLikes() {
+    const query = `DELETE FROM "PostLikes"`;
     await this.dataSource.query(query);
   }
 }

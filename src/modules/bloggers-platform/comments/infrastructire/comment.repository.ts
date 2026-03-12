@@ -66,6 +66,16 @@ class CommentsRepository {
   // async save(comment: CommentDocument): Promise<void> {
   //   await comment.save();
   // }
+
+  async deleteAll() {
+    const query = `DELETE FROM "Comments"`;
+    await this.dataSource.query(query);
+  }
+
+  async deleteAllCommentsLikes() {
+    const query = `DELETE FROM "CommentLikes"`;
+    await this.dataSource.query(query);
+  }
 }
 
 export default CommentsRepository;

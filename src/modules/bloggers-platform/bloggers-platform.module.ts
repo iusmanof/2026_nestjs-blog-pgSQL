@@ -35,6 +35,7 @@ import { GetCommentByIdQueryHandler } from '@modules/bloggers-platform/comments/
 import CommentsController from '@modules/bloggers-platform/comments/api/controllers/comments.controller';
 import { DeleteCommentUseCase } from '@modules/bloggers-platform/comments/application/use-cases/delete-comment.usecase';
 import { UpdateCommentUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment.usecase';
+import { UpdateLikeStatusUseCase } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
 
 const controllers = [
   BlogsController,
@@ -63,6 +64,7 @@ const useCases = [
   CreateCommentForPostUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
+  UpdateLikeStatusUseCase,
 ];
 const handlers = [
   GetBlogByIdQueryHandler,
@@ -87,6 +89,6 @@ const services = [];
   ],
   controllers: [...controllers],
   providers: [...repositories, ...useCases, ...handlers, ...services],
-  exports: [BlogsRepository, PostsRepository],
+  exports: [BlogsRepository, PostsRepository, CommentsRepository],
 })
 export class BloggersPlatformModule {}

@@ -1,9 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { UsersEntity } from '@user-accounts/domain/users.entity';
 import type { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 
 @Entity('PostLikes')
+@Unique(['postId', 'userId'])
 export class PostLikesEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,7 +23,10 @@ export class PostLikesEntity {
   @JoinColumn({ name: 'userId' })
   user: UsersEntity;
 
-  @Column({ type: 'varchar' })
+  @Column({
+    type: 'enum',
+    enum: ['Like', 'Dislike', 'None'],
+  })
   status: LikeStatus;
 
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })

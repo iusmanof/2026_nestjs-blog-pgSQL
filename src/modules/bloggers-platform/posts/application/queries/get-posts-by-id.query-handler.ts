@@ -1,5 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { PostsEntityWithBlogRowAndExtendedLikes, PostViewDto } from '../../api/dto/post-view.dto';
+import { PostsEntityWithBlogRowAndLikesRaw, PostViewDto } from '../../api/dto/post-view.dto';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import PostsQueryRepository from '@modules/bloggers-platform/posts/infrastructure/posts.query-repository';
@@ -28,6 +28,6 @@ export class GetPostByIdQueryHandler implements IQueryHandler<GetPostByIdQuery> 
       });
     }
 
-    return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndExtendedLikes);
+    return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndLikesRaw);
   }
 }

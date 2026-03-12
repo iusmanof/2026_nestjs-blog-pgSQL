@@ -65,7 +65,7 @@ class CommentsQueryRepository {
 
     const query = `
     SELECT status 
-    FROM "CommentLikesEntity"
+    FROM "CommentLikes"
     WHERE "commentId" = $1 AND "userId" = $2
     LIMIT 1
   `;

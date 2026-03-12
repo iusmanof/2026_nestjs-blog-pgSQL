@@ -3,7 +3,7 @@ import type { LikeStatus } from '@modules/bloggers-platform/posts/types/like-sta
 import { UsersEntity } from '@user-accounts/domain/users.entity';
 import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 
-@Entity({ name: 'CommentLikesEntity' })
+@Entity({ name: 'CommentLikes' })
 export class CommentLikesEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

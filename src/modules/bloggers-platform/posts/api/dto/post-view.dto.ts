@@ -16,6 +16,15 @@ export type NewestLikeViewDto = {
   login: string;
   addedAt: Date;
 };
+
+export type PostsEntityWithBlogRowAndLikesRaw = PostsEntity & {
+  blogName: string;
+  likesCount: string; // приходит из query как string
+  dislikesCount: string;
+  myStatus: LikeStatus;
+  newestLikes: NewestLikeViewDto[];
+};
+
 export class PostViewDto {
   id: string;
   title: string;
@@ -26,9 +35,7 @@ export class PostViewDto {
   createdAt: Date;
   extendedLikesInfo: ExtendedLikesInfoViewDto;
 
-  static mapToView = (
-    post: PostsEntityWithBlogRow & { extendedLikesInfo?: ExtendedLikesInfoViewDto },
-  ): PostViewDto => ({
+  static mapToView = (post: PostsEntityWithBlogRowAndLikesRaw): PostViewDto => ({
     id: post.id,
     title: post.title,
     shortDescription: post.shortDescription,
@@ -37,10 +44,10 @@ export class PostViewDto {
     blogName: post.blogName,
     createdAt: post.createdAt,
     extendedLikesInfo: {
-      likesCount: post.extendedLikesInfo?.likesCount ?? 0,
-      dislikesCount: post.extendedLikesInfo?.dislikesCount ?? 0,
-      myStatus: post.extendedLikesInfo?.myStatus ?? 'None',
-      newestLikes: post.extendedLikesInfo?.newestLikes ?? [],
+      likesCount: Number(post.likesCount ?? 0),
+      dislikesCount: Number(post.dislikesCount ?? 0),
+      myStatus: post.myStatus ?? 'None',
+      newestLikes: post.newestLikes ?? [],
     },
   });
 }

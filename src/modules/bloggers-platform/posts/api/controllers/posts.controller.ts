@@ -22,6 +22,8 @@ import { CreateCommentDto } from '@modules/bloggers-platform/posts/api/dto/creat
 import type { AuthenticatedRequest } from '@user-accounts/types/authenticated-request.interface';
 import { CommentViewDto } from '@modules/bloggers-platform/posts/api/dto/comment-view.dto';
 import { CreateCommentForPostCommand } from '@modules/bloggers-platform/comments/application/use-cases/create-comment-for-post.usecase';
+import { UpdateLikeStatusDto } from '@modules/bloggers-platform/posts/api/dto/update-like-status.dto';
+import { UpdateLikeStatusCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
 
 @Controller('/posts')
 class PostsController {
@@ -65,18 +67,18 @@ class PostsController {
     );
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Put(':postId/like-status')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async updateLikeStatus(
-  //   @Param('postId') postId: string,
-  //   @Body() dto: UpdateLikeStatusDto,
-  //   @Req() req: AuthenticatedRequest,
-  // ): Promise<void> {
-  //   const userId = req.user?.id;
-  //   const login = req.user?.login;
-  //   return this.commandBus.execute(new UpdateLikeStatusCommand(userId, postId, login, dto));
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Put(':postId/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateLikeStatus(
+    @Param('postId') postId: string,
+    @Body() dto: UpdateLikeStatusDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = req.user?.id;
+    const login = req.user?.login;
+    return this.commandBus.execute(new UpdateLikeStatusCommand(userId, postId, login, dto));
+  }
 }
 
 export default PostsController;

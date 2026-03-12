@@ -34,6 +34,8 @@ export class GetPostsForBlogQueryHandler implements IQueryHandler<
       queryParams,
       userId,
     );
+
+    console.log(items);
     return {
       pagesCount: Math.ceil(totalCount / queryParams.pageSize),
       page: queryParams.pageNumber,
