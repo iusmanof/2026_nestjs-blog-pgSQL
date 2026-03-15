@@ -15,100 +15,37 @@ class PostsQueryRepository {
     protected dataSource: DataSource,
   ) {}
 
+  async selectTotalCount(): Promise<number> {
+    const queryPosts = `SELECT COUNT(*) FROM "Posts"`;
+    const result: [{ count: number }] = await this.dataSource.query(queryPosts);
+    return result[0].count;
+  }
+
   async getAll(query: PostsQueryParamsDto, userId?: string) {
-    const { sortBy = 'createdAt', sortDirection, pageSize } = query;
-
+    const totalCount = Number(await this.selectTotalCount());
+    const limit = query.pageSize;
     const offset = query.calculateSkip();
-
-    // const safeSortDirection = sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
-
-    const sortFieldMap: Record<string, string> = {
-      id: 'p."id"',
-      title: 'p."title"',
-      shortDescription: 'p."shortDescription"',
-      content: 'p."content"',
-      blogId: 'p."blogId"',
-      createdAt: 'p."createdAt"',
-      blogName: 'b."name"',
-    };
-
-    // const safeSortField = sortFieldMap[sortBy] ?? sortFieldMap.createdAt;
-
-    const [{ count }]: { count: string }[] = await this.dataSource.query(
-      `SELECT COUNT(*) FROM "Posts"`,
-    );
-
-    const totalCount = Number(count);
+    const sortBy = query.sortBy || 'createdAt';
+    const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+    const userIdParam = userId ?? null;
 
     const items: PostsEntityWithBlogRowAndLikesRaw[] = await this.dataSource.query(
-      `
-          SELECT
-              p."id",
-              p."title",
-              p."shortDescription",
-              p."content",
-              p."blogId",
-              p."createdAt",
-              b."name" as "blogName",
-
-              (
-                  SELECT COUNT(*)
-                  FROM "PostLikes"
-                  WHERE "postId" = p."id"
-                    AND "status" = 'Like'
-              )::int as "likesCount",
-
-              (
-                  SELECT COUNT(*)
-                  FROM "PostLikes"
-                  WHERE "postId" = p."id"
-                    AND "status" = 'Dislike'
-              )::int as "dislikesCount",
-
-              COALESCE(
-                      (
-                          SELECT "status"
-                          FROM "PostLikes"
-                          WHERE "postId" = p."id"
-                            AND "userId" = $3
-                      LIMIT 1
-                  ),
-        'None'
-    ) as "myStatus",
-
-              COALESCE(nl."newestLikes", '[]') as "newestLikes"
-
-          FROM "Posts" p
-
-                   JOIN "Blogs" b
-                        ON b."id" = p."blogId"
-
-                   LEFT JOIN LATERAL (
-              SELECT json_agg(
-                             json_build_object(
-                                     'userId', pl."userId",
-                                     'login', u."login",
-                                     'addedAt', pl."addedAt"
-                             )
-                                 ORDER BY pl."addedAt" DESC
-                     ) as "newestLikes"
-              FROM (
-                       SELECT *
-                       FROM "PostLikes"
-                       WHERE "postId" = p."id"
-                         AND "status" = 'Like'
-                       ORDER BY "addedAt" DESC
-                           LIMIT 3
-                   ) pl
-                       JOIN "Users" u
-                            ON u."id" = pl."userId"
-                  ) nl ON TRUE
-
-          ORDER BY p."createdAt" DESC
-              LIMIT $1
-          OFFSET $2
-            `,
-      [pageSize, offset, userId ?? null],
+      `SELECT p."id", p."title", p."shortDescription", p."content", p."blogId", p."createdAt", b."name" as "blogName",
+                (SELECT COUNT(*) FROM "PostLikes" WHERE "postId" = p."id" AND "status" = 'Like') as "likesCount",
+                (SELECT COUNT(*) FROM "PostLikes" WHERE "postId" = p."id" AND "status" = 'Dislike') as "dislikesCount",
+                (SELECT "status" FROM "PostLikes" WHERE "postId" = p."id" AND "userId" = $3 LIMIT 1) as "myStatus",
+                (SELECT json_agg(l)  FROM ( SELECT pl."userId", u."login", pl."addedAt" FROM "PostLikes" pl
+                                   JOIN "Users" u ON u."id" = pl."userId"
+                                   WHERE pl."postId" = p."id"
+                                   AND pl."status" = 'Like'
+                                   ORDER BY pl."addedAt" DESC
+                                   LIMIT 3) 
+                               l) AS "newestLikes"
+              FROM "Posts" p
+              JOIN "Blogs" b ON b."id" = p."blogId"
+              ORDER BY p."${sortBy}" ${sortDirection}
+              LIMIT $1 OFFSET $2;`,
+      [limit, offset, userIdParam],
     );
 
     return {
@@ -119,69 +56,35 @@ class PostsQueryRepository {
 
   async findByIdWithRequestingUser(
     postId: string,
-    currentUserId?: string,
+    userId?: string,
   ): Promise<PostsEntity | null> {
-    const query = `
-      SELECT
-        p."id",
-        p."title",
-        p."shortDescription",
-        p."content",
-        p."blogId",
-        p."createdAt",
-        b."name" AS "blogName",
+    const userIdParam = userId ?? null;
+    const item: PostsEntityWithBlogRowAndLikesRaw[] = await this.dataSource.query(
+      `SELECT p."id", p."title", p."shortDescription", p."content", p."blogId", p."createdAt", b."name" as "blogName",
+      COALESCE(SUM(CASE WHEN pl."status" = 'Like' THEN 1 ELSE 0 END), 0) as "likesCount",
+      COALESCE(SUM(CASE WHEN pl."status" = 'Dislike' THEN 1 ELSE 0 END), 0) as "dislikesCount",
+      MAX(CASE WHEN pl."userId" = $2 THEN pl."status" END) as "myStatus",
+      (
+        SELECT json_agg(l)
+        FROM (
+          SELECT pl2."userId", u."login", pl2."addedAt"
+          FROM "PostLikes" pl2
+          JOIN "Users" u ON u."id" = pl2."userId"
+          WHERE pl2."postId" = p."id" AND pl2."status" = 'Like'
+          ORDER BY pl2."addedAt" DESC
+          LIMIT 3
+        ) l
+      ) as "newestLikes"
+        FROM "Posts" p
+        JOIN "Blogs" b ON b."id" = p."blogId"
+        LEFT JOIN "PostLikes" pl ON pl."postId" = p."id"
+        WHERE p."id" = $1
+        GROUP BY p."id", b."name";
+        `,
+      [postId, userIdParam],
+    );
 
-        -- считаем лайки
-        COALESCE(
-          (SELECT COUNT(*) FROM "PostLikes" pl
-           WHERE pl."postId" = p."id"
-             AND pl."status" = 'Like'), 0
-        ) AS "likesCount",
-
-        -- считаем дизлайки
-        COALESCE(
-          (SELECT COUNT(*) FROM "PostLikes" pl
-           WHERE pl."postId" = p."id"
-             AND pl."status" = 'Dislike'), 0
-        ) AS "dislikesCount",
-
-        -- статус текущего пользователя
-        COALESCE(
-          (SELECT pl."status"
-           FROM "PostLikes" pl
-           WHERE pl."postId" = p."id"
-             AND pl."userId" = $2), 'None'
-        ) AS "myStatus",
-
-        -- три последних лайка
-        COALESCE(
-          (
-            SELECT json_agg(json_build_object(
-              'addedAt', pl_sub."addedAt",
-              'userId', pl_sub."userId",
-              'login', pl_sub."login"
-                            ) ORDER BY pl_sub."addedAt" DESC)
-            FROM (
-                   SELECT pl."addedAt", pl."userId", u."login"
-                   FROM "PostLikes" pl
-                          JOIN "Users" u ON u."id" = pl."userId"
-                   WHERE pl."postId" = p."id"
-                     AND pl."status" = 'Like'
-                   ORDER BY pl."addedAt" DESC
-                     LIMIT 3
-                 ) AS pl_sub
-          ), '[]'::json
-        ) AS "newestLikes"
-
-      FROM "Posts" p
-             JOIN "Blogs" b ON b."id" = p."blogId"
-      WHERE p."id" = $1;
-     
-     `;
-    const values = [postId, currentUserId ?? null];
-
-    const result: PostsEntity[] = await this.dataSource.query(query, values);
-    return result[0];
+    return item[0] ?? null;
   }
 
   async getPostsForBlog(blogId: string, query: PostsQueryParamsDto, currentUserId?: string) {
