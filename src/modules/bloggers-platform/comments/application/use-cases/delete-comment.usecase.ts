@@ -19,6 +19,14 @@ export class DeleteCommentUseCase implements ICommandHandler<DeleteCommentComman
   ) {}
 
   async execute(command: DeleteCommentCommand): Promise<void> {
+    if (!command.userId) {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized, // новый код
+        message: 'User is not authenticated',
+        extensions: [new Extension('Missing authentication', 'userId')],
+      });
+    }
+
     const comment = await this.commentsQueryRepository.findById(command.commentId);
     if (!comment) {
       throw new DomainException({

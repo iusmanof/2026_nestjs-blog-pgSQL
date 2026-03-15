@@ -7,10 +7,7 @@ export type ExtendedLikesInfoViewDto = {
   myStatus: LikeStatus;
   newestLikes: NewestLikeViewDto[];
 };
-export type PostsEntityWithBlogRow = PostsEntity & { blogName: string };
-export type PostsEntityWithBlogRowAndExtendedLikes = PostsEntity & { blogName: string } & {
-  extendedLikesInfo: ExtendedLikesInfoViewDto;
-};
+
 export type NewestLikeViewDto = {
   userId: string;
   login: string;

@@ -1,6 +1,6 @@
 import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { Trim } from '@core/decorators/transform/trim';
-import type { LikeStatus } from '../../types/like-status.type';
+import type { LikeStatus } from '../../../posts/types/like-status.type';
 
 export class UpdateCommentLikeStatusDto {
   @Trim()

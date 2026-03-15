@@ -2,12 +2,12 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import CommentsQueryRepository from '../../infrastructire/comments.query-repository';
-import { CommentViewDto } from '../../../posts/api/dto/comment-view.dto';
+import { CommentViewDto } from '../../api/dto/comment-view.dto';
 
 export class GetCommentByIdQuery {
   constructor(
     public commentId: string,
-    // public userId: string,
+    public userId?: string,
   ) {}
 }
 
@@ -19,8 +19,7 @@ export class GetCommentByIdQueryHandler implements IQueryHandler<
   constructor(private readonly commentsQueryRepository: CommentsQueryRepository) {}
 
   async execute(query: GetCommentByIdQuery): Promise<CommentViewDto> {
-    // const { userId, commentId } = query;
-    const { commentId } = query;
+    const { userId, commentId } = query;
     const comment = await this.commentsQueryRepository.findById(commentId);
 
     if (!comment) {
@@ -32,7 +31,7 @@ export class GetCommentByIdQueryHandler implements IQueryHandler<
     }
 
     // const myStatus = await this.commentsQueryRepository.findStatusByUserId(commentId, userId);
-    //   return CommentViewDto.mapToViewWithCurrentStatus(comment, myStatus);
+    // return CommentViewDto.mapToViewWithCurrentStatus(comment, myStatus);
     return CommentViewDto.mapToViewWithUser(comment, 'None');
   }
 }

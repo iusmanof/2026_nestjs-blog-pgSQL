@@ -1,6 +1,6 @@
-import { CreateCommentDto } from '../../../posts/api/dto/create-comment.dto';
+import { CreateCommentDto } from '../../api/dto/create-comment.dto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { CommentViewDto } from '../../../posts/api/dto/comment-view.dto';
+import { CommentViewDto } from '../../api/dto/comment-view.dto';
 import CommentsRepository from '../../infrastructire/comment.repository';
 import PostsQueryRepository from '../../../posts/infrastructure/posts.query-repository';
 
@@ -21,8 +21,6 @@ export class CreateCommentForPostUseCase implements ICommandHandler<CreateCommen
   ) {}
 
   async execute(command: CreateCommentForPostCommand): Promise<CommentViewDto> {
-    console.log(command.userId);
-    console.log(command.postId);
     await this.postsQueryRepository.findOrNotFoundFail(command.postId);
 
     const entity = await this.commentsRepository.create(
@@ -31,8 +29,6 @@ export class CreateCommentForPostUseCase implements ICommandHandler<CreateCommen
       command.login,
       command.dto.content,
     );
-    // return entity;
-    // await this.commentsRepository.save(entity);
 
     return CommentViewDto.mapToViewWithUser(entity, 'None');
   }

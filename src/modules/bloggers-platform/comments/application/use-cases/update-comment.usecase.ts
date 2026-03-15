@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
-import { UpdateCommentDto } from '@modules/bloggers-platform/posts/api/dto/update-comment.dto';
+import { UpdateCommentDto } from '@modules/bloggers-platform/comments/api/dto/update-comment.dto';
 import CommentsRepository from '@modules/bloggers-platform/comments/infrastructire/comment.repository';
 import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 

@@ -13,7 +13,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import type { AuthenticatedRequest } from '@user-accounts/types/authenticated-request.interface';
 import { JwtAuthGuard } from '@user-accounts/guards/bearer/jwt-auth.guard';
 import { DeleteCommentCommand } from '@modules/bloggers-platform/comments/application/use-cases/delete-comment.usecase';
-import { UpdateCommentDto } from '@modules/bloggers-platform/posts/api/dto/update-comment.dto';
+import { UpdateCommentDto } from '@modules/bloggers-platform/comments/api/dto/update-comment.dto';
 import { UpdateCommentCommand } from '@modules/bloggers-platform/comments/application/use-cases/update-comment.usecase';
 
 @Controller('comments')

@@ -18,9 +18,9 @@ import { PostViewDto } from '@modules/bloggers-platform/posts/api/dto/post-view.
 import { UpdatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
 import { DeletePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/delete-post.usecase';
 import { JwtAuthGuard } from '@user-accounts/guards/bearer/jwt-auth.guard';
-import { CreateCommentDto } from '@modules/bloggers-platform/posts/api/dto/create-comment.dto';
+import { CreateCommentDto } from '@modules/bloggers-platform/comments/api/dto/create-comment.dto';
 import type { AuthenticatedRequest } from '@user-accounts/types/authenticated-request.interface';
-import { CommentViewDto } from '@modules/bloggers-platform/posts/api/dto/comment-view.dto';
+import { CommentViewDto } from '@modules/bloggers-platform/comments/api/dto/comment-view.dto';
 import { CreateCommentForPostCommand } from '@modules/bloggers-platform/comments/application/use-cases/create-comment-for-post.usecase';
 import { UpdateLikeStatusDto } from '@modules/bloggers-platform/posts/api/dto/update-like-status.dto';
 import { UpdateLikeStatusCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
