@@ -46,15 +46,6 @@ class CommentsRepository {
                    DO UPDATE SET "status" = EXCLUDED."status"`;
     const values = [commentId, userId, status];
     return await this.dataSource.query(query, values);
-    // const entity = await this.commentModel.findById(commentId);
-    // if (!entity) return false;
-    //
-    // entity.updateLikeStatus(userId, likeStatus);
-    // // entity.saveInstance(commentModel) { commentModel.save() }
-    //
-    // await entity.save();
-    //
-    // return true;
   }
 
   async deleteAll() {
