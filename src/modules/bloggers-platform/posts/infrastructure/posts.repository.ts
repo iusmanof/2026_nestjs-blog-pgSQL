@@ -54,7 +54,7 @@ class PostsRepository {
   async setLikeStatus(
     userId: string,
     postId: string,
-    login: string,
+    // login: string,
     status: LikeStatus,
   ): Promise<void> {
     const query = `

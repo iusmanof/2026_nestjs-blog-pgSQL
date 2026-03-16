@@ -33,7 +33,7 @@ export class UpdateLikeStatusUseCase implements ICommandHandler<UpdateLikeStatus
     return await this.postsRepository.setLikeStatus(
       command.userId,
       command.postId,
-      command.login,
+      // command.login,
       command.dto.likeStatus,
     );
   }

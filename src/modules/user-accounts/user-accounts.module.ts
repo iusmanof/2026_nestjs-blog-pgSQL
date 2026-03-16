@@ -40,6 +40,8 @@ import { GetDevicesQueryHandler } from './application/queries/users/get-devices.
 import { DeleteDeviceUseCase } from './application/use-cases/auth/delete-device.command';
 import { SecurityDevicesController } from './api/controllers/security-devices.controller';
 import { DeleteAllDevicesUseCase } from './application/use-cases/auth/delete-all-devices.useacse';
+import { UpdateCommentLikeStatusUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment-like-status.usecase';
+import CommentsRepository from '@modules/bloggers-platform/comments/infrastructire/comment.repository';
 
 const controllers = [UserController, AuthController, SecurityDevicesController];
 const services = [CryptoService, ValidateUserService, CodeGeneratorService];
@@ -48,6 +50,7 @@ const repositories = [
   UsersRepository,
   SessionRepository,
   EmailConfirmationRepository,
+  CommentsRepository,
 ];
 const strategies = [BasicStrategy, LocalStrategy, JwtStrategy];
 const useCases = [
@@ -63,6 +66,7 @@ const useCases = [
   RegistrationEmailResendingUseCase,
   DeleteDeviceUseCase,
   DeleteAllDevicesUseCase,
+  UpdateCommentLikeStatusUseCase,
 ];
 const handlers = [GetUsersQueryHandler, GetUserByIdQueryHandler, GetDevicesQueryHandler];
 

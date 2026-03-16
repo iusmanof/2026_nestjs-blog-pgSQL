@@ -15,6 +15,8 @@ import { JwtAuthGuard } from '@user-accounts/guards/bearer/jwt-auth.guard';
 import { DeleteCommentCommand } from '@modules/bloggers-platform/comments/application/use-cases/delete-comment.usecase';
 import { UpdateCommentDto } from '@modules/bloggers-platform/comments/api/dto/update-comment.dto';
 import { UpdateCommentCommand } from '@modules/bloggers-platform/comments/application/use-cases/update-comment.usecase';
+import { UpdateCommentLikeStatusDto } from '@modules/bloggers-platform/comments/api/dto/update-comment-like-status.dto';
+import { UpdateCommentLikeStatusCommand } from '@modules/bloggers-platform/comments/application/use-cases/update-comment-like-status.usecase';
 
 @Controller('comments')
 class CommentsController {
@@ -43,17 +45,17 @@ class CommentsController {
     return this.commandBus.execute(new DeleteCommentCommand(commentId, userId));
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Put(':commentId/like-status')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async updateCommentLikeStatus(
-  //   @Param('commentId') commentId: string,
-  //   @Req() req: AuthenticatedRequest,
-  //   @Body() dto: UpdateCommentLikeStatusDto,
-  // ): Promise<void> {
-  //   const userId = req.user.id;
-  //   return this.commandBus.execute(new UpdateCommentLikeStatusCommand(commentId, userId, dto));
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Put(':commentId/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateCommentLikeStatus(
+    @Param('commentId') commentId: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateCommentLikeStatusDto,
+  ): Promise<void> {
+    const userId = req.user.id;
+    return this.commandBus.execute(new UpdateCommentLikeStatusCommand(commentId, userId, dto));
+  }
 }
 
 export default CommentsController;

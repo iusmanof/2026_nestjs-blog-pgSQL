@@ -3,6 +3,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 import { UpdateCommentDto } from '@modules/bloggers-platform/comments/api/dto/update-comment.dto';
+import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 
 @Injectable()
 class CommentsRepository {
@@ -39,25 +40,22 @@ class CommentsRepository {
     return await this.dataSource.query(query, values);
   }
 
-  // async updateLikeStatus(
-  //   commentId: string,
-  //   userId: string,
-  //   likeStatus: LikeStatus,
-  // ): Promise<boolean> {
-  //   const entity = await this.commentModel.findById(commentId);
-  //   if (!entity) return false;
-  //
-  //   entity.updateLikeStatus(userId, likeStatus);
-  //   // entity.saveInstance(commentModel) { commentModel.save() }
-  //
-  //   await entity.save();
-  //
-  //   return true;
-  // }
-  //
-  // async save(comment: CommentDocument): Promise<void> {
-  //   await comment.save();
-  // }
+  async updateLikeStatus(commentId: string, userId: string, status: LikeStatus): Promise<boolean> {
+    const query = `INSERT INTO "CommentLikes"  ("commentId", "userId", "status") 
+                   VALUES ($1, $2, $3) ON CONFLICT ("commentId", "userId") 
+                   DO UPDATE SET "status" = EXCLUDED."status"`;
+    const values = [commentId, userId, status];
+    return await this.dataSource.query(query, values);
+    // const entity = await this.commentModel.findById(commentId);
+    // if (!entity) return false;
+    //
+    // entity.updateLikeStatus(userId, likeStatus);
+    // // entity.saveInstance(commentModel) { commentModel.save() }
+    //
+    // await entity.save();
+    //
+    // return true;
+  }
 
   async deleteAll() {
     const query = `DELETE FROM "Comments"`;
