@@ -28,7 +28,6 @@ import { CreateCommentForPostUseCase } from '@modules/bloggers-platform/comments
 import CommentsRepository from '@modules/bloggers-platform/comments/infrastructire/comment.repository';
 import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 import { GetCommentsByPostIdQueryHandler } from '@modules/bloggers-platform/comments/application/queries/get-comments-by-post-id.query-handler';
-import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 import { CommentLikesEntity } from '@modules/bloggers-platform/comments/domain/comment-like.entity';
 import CommentsPublicController from '@modules/bloggers-platform/comments/api/controllers/comments-public.controller';
 import { GetCommentByIdQueryHandler } from '@modules/bloggers-platform/comments/application/queries/get-comment-by-id.query-handler';
@@ -36,6 +35,8 @@ import CommentsController from '@modules/bloggers-platform/comments/api/controll
 import { DeleteCommentUseCase } from '@modules/bloggers-platform/comments/application/use-cases/delete-comment.usecase';
 import { UpdateCommentUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment.usecase';
 import { UpdateLikeStatusUseCase } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
+import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
+import { UpdateCommentLikeStatusUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment-like-status.usecase';
 
 const controllers = [
   BlogsController,
@@ -65,6 +66,7 @@ const useCases = [
   UpdateCommentUseCase,
   DeleteCommentUseCase,
   UpdateLikeStatusUseCase,
+  UpdateCommentLikeStatusUseCase,
 ];
 const handlers = [
   GetBlogByIdQueryHandler,

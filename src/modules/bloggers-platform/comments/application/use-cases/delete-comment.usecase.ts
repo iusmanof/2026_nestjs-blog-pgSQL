@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import CommentsRepository from '../../infrastructire/comment.repository';
-import CommentsQueryRepository from '../../infrastructire/comments.query-repository';
+import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 
 export class DeleteCommentCommand {
   constructor(

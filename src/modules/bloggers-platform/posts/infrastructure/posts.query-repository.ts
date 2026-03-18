@@ -4,8 +4,6 @@ import { DataSource } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { PostsQueryParamsDto } from '@modules/bloggers-platform/posts/api/dto/posts-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
-import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import { PostsEntityWithBlogRowAndLikesRaw } from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
 
 @Injectable()
@@ -28,6 +26,13 @@ class PostsQueryRepository {
     const sortBy = query.sortBy || 'createdAt';
     const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
     const userIdParam = userId ?? null;
+    const sortMap: Record<string, string> = {
+      createdAt: 'p."createdAt"',
+      title: 'p."title"',
+      blogName: 'b."name"',
+    };
+    const orderBy = sortMap[sortBy] || 'p."createdAt"';
+    console.log(sortMap);
 
     const items: PostsEntityWithBlogRowAndLikesRaw[] = await this.dataSource.query(
       `SELECT p."id", p."title", p."shortDescription", p."content", p."blogId", p."createdAt", b."name" as "blogName",
@@ -43,7 +48,7 @@ class PostsQueryRepository {
                                l) AS "newestLikes"
               FROM "Posts" p
               JOIN "Blogs" b ON b."id" = p."blogId"
-              ORDER BY p."${sortBy}" ${sortDirection}
+              ORDER BY ${orderBy} ${sortDirection}
               LIMIT $1 OFFSET $2;`,
       [limit, offset, userIdParam],
     );
@@ -54,10 +59,7 @@ class PostsQueryRepository {
     };
   }
 
-  async findByIdWithRequestingUser(
-    postId: string,
-    userId?: string,
-  ): Promise<PostsEntity | null> {
+  async findByIdWithRequestingUser(postId: string, userId?: string): Promise<PostsEntity | null> {
     const userIdParam = userId ?? null;
     const item: PostsEntityWithBlogRowAndLikesRaw[] = await this.dataSource.query(
       `SELECT p."id", p."title", p."shortDescription", p."content", p."blogId", p."createdAt", b."name" as "blogName",
@@ -127,18 +129,9 @@ class PostsQueryRepository {
     };
   }
 
-  async findOrNotFoundFail(id: string): Promise<PostsEntity | null> {
+  async findOrNotFoundFail(postId: string): Promise<PostsEntity[]> {
     const query = `SELECT * FROM "Posts" WHERE id = $1`;
-    const values = [id];
-    const entity: PostsEntity[] = await this.dataSource.query(query, values);
-    if (!entity.length) {
-      throw new DomainException({
-        code: DomainExceptionCode.NotFound,
-        message: 'Post not found',
-        extensions: [new Extension('Post with given id does not exist', 'id')],
-      });
-    }
-    return entity[0];
+    return await this.dataSource.query(query, [postId]);
   }
 }
 

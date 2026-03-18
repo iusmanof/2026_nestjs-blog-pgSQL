@@ -41,11 +41,47 @@ class CommentsRepository {
   }
 
   async updateLikeStatus(commentId: string, userId: string, status: LikeStatus): Promise<boolean> {
-    const query = `INSERT INTO "CommentLikes"  ("commentId", "userId", "status") 
-                   VALUES ($1, $2, $3) ON CONFLICT ("commentId", "userId") 
-                   DO UPDATE SET "status" = EXCLUDED."status"`;
-    const values = [commentId, userId, status];
-    return await this.dataSource.query(query, values);
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.query(
+        `INSERT INTO "CommentLikes" ("commentId", "userId", "status") 
+     VALUES ($1, $2, $3)
+     ON CONFLICT ("commentId", "userId") 
+     DO UPDATE SET "status" = EXCLUDED."status"`,
+        [commentId, userId, status],
+      );
+
+      await queryRunner.query(
+        `UPDATE "Comments" c
+     SET
+       "likesCount" = sub.likes,
+       "dislikesCount" = sub.dislikes
+     FROM (
+       SELECT
+         cl."commentId",
+         COUNT(*) FILTER (WHERE cl."status" = 'Like') AS likes,
+         COUNT(*) FILTER (WHERE cl."status" = 'Dislike') AS dislikes
+       FROM "CommentLikes" cl
+       WHERE cl."commentId" = $1
+       GROUP BY cl."commentId"
+     ) sub
+     WHERE c.id = sub."commentId"`,
+        [commentId],
+      );
+
+      await queryRunner.commitTransaction();
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      // throw e;
+      return false;
+    } finally {
+      await queryRunner.release();
+    }
+    return true;
   }
 
   async deleteAll() {

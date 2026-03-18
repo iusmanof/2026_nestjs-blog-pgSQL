@@ -21,26 +21,113 @@ class CommentsQueryRepository {
     return result[0] ?? null;
   }
 
-  async getCommentByPostId(postId: string, query: CommentsQueryParamsDto) {
-    const countQuery = `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`;
-    const countResult: [{ count: string }] = await this.dataSource.query(countQuery, [postId]);
-    const totalCount = Number(countResult[0].count);
-    const sortBy = query.sortBy || 'createdAt';
-    const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
-    const limit = query.pageSize;
-    const offset = query.calculateSkip();
+  async getCommentByPostId(postId: string, userId: string, query: CommentsQueryParamsDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    const itemsQuery = `SELECT * FROM "Comments" WHERE "postId" = $1 
-                         ORDER BY "${sortBy}" ${sortDirection} 
-                         LIMIT $2 OFFSET $3`;
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const items: CommentsEntity[] = await this.dataSource.query(itemsQuery, [
-      postId,
-      limit,
-      offset,
-    ]);
+    try {
+      const sortBy = query.sortBy || 'createdAt';
+      const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+      const limit = query.pageSize;
+      const offset = query.calculateSkip();
 
-    return { items, totalCount };
+      const countResult = (await queryRunner.query(
+        `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`,
+        [postId],
+      )) as { count: string }[];
+      const totalCount = Number(countResult[0].count);
+
+      const items = (await queryRunner.query(
+        `SELECT * FROM "Comments"
+       WHERE "postId" = $1
+       ORDER BY "${sortBy}" ${sortDirection}
+       LIMIT $2 OFFSET $3`,
+        [postId, limit, offset],
+      )) as CommentsEntity[];
+
+      let status: LikeStatus = 'None';
+      if (userId) {
+        const statusResult = (await queryRunner.query(
+          `SELECT "status" FROM "PostLikes"
+         WHERE "postId" = $1 AND "userId" = $2
+         LIMIT 1`,
+          [postId, userId],
+        )) as [{ status: LikeStatus }];
+        if (statusResult.length) {
+          status = statusResult[0].status;
+        }
+      }
+
+      await queryRunner.commitTransaction();
+
+      return { items, totalCount, status };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  // async getCommentByPostId(postId: string, userId: string, query: CommentsQueryParamsDto) {
+  //   const countQuery = `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`;
+  //   const countResult: [{ count: string }] = await this.dataSource.query(countQuery, [postId]);
+  //   const totalCount = Number(countResult[0].count);
+  //   const sortBy = query.sortBy || 'createdAt';
+  //   const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+  //   const limit = query.pageSize;
+  //   const offset = query.calculateSkip();
+  //
+  //   const itemsQuery = `SELECT * FROM "Comments" WHERE "postId" = $1
+  //                        ORDER BY "${sortBy}" ${sortDirection}
+  //                        LIMIT $2 OFFSET $3`;
+  //
+  //   const items: CommentsEntity[] = await this.dataSource.query(itemsQuery, [
+  //     postId,
+  //     limit,
+  //     offset,
+  //   ]);
+  //
+  //   return { items, totalCount };
+  // }
+  // const queryRunner = this.dataSource.createQueryRunner();
+  //
+  // await queryRunner.connect();
+  // await queryRunner.startTransaction();
+  //
+  // try {
+  //   const countQuery = await queryRunner.query(
+  //     `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`,
+  //   );
+  //   const countResult: [{ count: string }] = await this.dataSource.query(countQuery, [postId]);
+  //   const totalCount = Number(countResult[0].count);
+  //
+  //   const items = await queryRunner.query(
+  //     `SELECT * FROM "Comments" WHERE "postId" = $1
+  //                      ORDER BY "${sortBy}" ${sortDirection}
+  //                      LIMIT $2 OFFSET $3`,
+  //     [postId, limit, offset],
+  //   );
+  //   await queryRunner.commitTransaction();
+  //
+  //   const status = await queryRunner.query(
+  //     `SELECT "status" FROM "PostLikes" WHERE "postId" = $1 AND "userId" = $2 LIMIT 1;`,
+  //     [postId, userId],
+  //   );
+  //   await queryRunner.commitTransaction();
+  // } catch (error) {
+  //   await queryRunner.rollbackTransaction();
+  //   throw error;
+  // } finally {
+  //   await queryRunner.release();
+  // }
+  //
+  // return { items, totalCount, status };
+
+  async findOrNotFail(commentId: string): Promise<CommentsEntity[]> {
+    const query = `SELECT * FROM "Comments" WHERE "id" = $1`;
+    return await this.dataSource.query(query, [commentId]);
   }
 
   async findStatusByUserId(commentId: string, userId?: string): Promise<LikeStatus> {
