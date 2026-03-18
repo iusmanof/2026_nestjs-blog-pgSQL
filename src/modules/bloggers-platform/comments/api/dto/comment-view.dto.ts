@@ -7,7 +7,7 @@ interface PaginatedCommentsArgs {
   page: number;
   pageSize: number;
   totalCount: number;
-  status: LikeStatus;
+  statusMap: Map<string, LikeStatus>;
 }
 
 export class CommentViewDto {
@@ -44,9 +44,17 @@ export class CommentViewDto {
     };
   };
 
-  static mapToPaginatedView({ items, page, pageSize, totalCount, status }: PaginatedCommentsArgs) {
+  static mapToPaginatedView({
+    items,
+    page,
+    pageSize,
+    totalCount,
+    statusMap,
+  }: PaginatedCommentsArgs) {
     return PostPaginatedViewDto.mapToView({
-      items: items.map((comment) => CommentViewDto.mapToViewWithCurrentStatus(comment, status)),
+      items: items.map((comment) =>
+        CommentViewDto.mapToViewWithCurrentStatus(comment, statusMap.get(comment.id) || 'None'),
+      ),
       page,
       pageSize,
       totalCount,

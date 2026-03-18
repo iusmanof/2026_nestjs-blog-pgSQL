@@ -33,7 +33,7 @@ export class GetCommentsByPostIdQueryHandler implements IQueryHandler<GetComment
       });
     }
 
-    const { items, totalCount, status } = await this.commentsQueryRepository.getCommentByPostId(
+    const { items, totalCount, statusMap } = await this.commentsQueryRepository.getCommentByPostId(
       postId,
       userId,
       queryParams,
@@ -44,7 +44,7 @@ export class GetCommentsByPostIdQueryHandler implements IQueryHandler<GetComment
       page: queryParams.pageNumber,
       pageSize: queryParams.pageSize,
       totalCount: totalCount,
-      status: status,
+      statusMap: statusMap,
     });
   }
 }

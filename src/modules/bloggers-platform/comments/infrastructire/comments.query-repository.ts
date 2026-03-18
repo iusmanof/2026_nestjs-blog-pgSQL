@@ -23,9 +23,7 @@ class CommentsQueryRepository {
 
   async getCommentByPostId(postId: string, userId: string, query: CommentsQueryParamsDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-
     await queryRunner.connect();
-    await queryRunner.startTransaction();
 
     try {
       const sortBy = query.sortBy || 'createdAt';
@@ -47,22 +45,29 @@ class CommentsQueryRepository {
         [postId, limit, offset],
       )) as CommentsEntity[];
 
-      let status: LikeStatus = 'None';
-      if (userId) {
-        const statusResult = (await queryRunner.query(
-          `SELECT "status" FROM "PostLikes"
-         WHERE "postId" = $1 AND "userId" = $2
-         LIMIT 1`,
-          [postId, userId],
-        )) as [{ status: LikeStatus }];
-        if (statusResult.length) {
-          status = statusResult[0].status;
-        }
-      }
+      const commentIds = items.map((c) => c.id);
 
-      await queryRunner.commitTransaction();
+      const likeStatuses =
+        userId && commentIds.length
+          ? ((await queryRunner.query(
+              `SELECT "commentId", "status"
+             FROM "CommentLikes"
+             WHERE "userId" = $1
+             AND "commentId" = ANY($2)`,
+              [userId, commentIds],
+            )) as {
+              commentId: string;
+              status: LikeStatus;
+            }[])
+          : [];
 
-      return { items, totalCount, status };
+      const statusMap = new Map<string, LikeStatus>();
+
+      likeStatuses.forEach((l) => {
+        statusMap.set(l.commentId, l.status);
+      });
+
+      return { items, totalCount, statusMap };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -70,60 +75,6 @@ class CommentsQueryRepository {
       await queryRunner.release();
     }
   }
-  // async getCommentByPostId(postId: string, userId: string, query: CommentsQueryParamsDto) {
-  //   const countQuery = `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`;
-  //   const countResult: [{ count: string }] = await this.dataSource.query(countQuery, [postId]);
-  //   const totalCount = Number(countResult[0].count);
-  //   const sortBy = query.sortBy || 'createdAt';
-  //   const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
-  //   const limit = query.pageSize;
-  //   const offset = query.calculateSkip();
-  //
-  //   const itemsQuery = `SELECT * FROM "Comments" WHERE "postId" = $1
-  //                        ORDER BY "${sortBy}" ${sortDirection}
-  //                        LIMIT $2 OFFSET $3`;
-  //
-  //   const items: CommentsEntity[] = await this.dataSource.query(itemsQuery, [
-  //     postId,
-  //     limit,
-  //     offset,
-  //   ]);
-  //
-  //   return { items, totalCount };
-  // }
-  // const queryRunner = this.dataSource.createQueryRunner();
-  //
-  // await queryRunner.connect();
-  // await queryRunner.startTransaction();
-  //
-  // try {
-  //   const countQuery = await queryRunner.query(
-  //     `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`,
-  //   );
-  //   const countResult: [{ count: string }] = await this.dataSource.query(countQuery, [postId]);
-  //   const totalCount = Number(countResult[0].count);
-  //
-  //   const items = await queryRunner.query(
-  //     `SELECT * FROM "Comments" WHERE "postId" = $1
-  //                      ORDER BY "${sortBy}" ${sortDirection}
-  //                      LIMIT $2 OFFSET $3`,
-  //     [postId, limit, offset],
-  //   );
-  //   await queryRunner.commitTransaction();
-  //
-  //   const status = await queryRunner.query(
-  //     `SELECT "status" FROM "PostLikes" WHERE "postId" = $1 AND "userId" = $2 LIMIT 1;`,
-  //     [postId, userId],
-  //   );
-  //   await queryRunner.commitTransaction();
-  // } catch (error) {
-  //   await queryRunner.rollbackTransaction();
-  //   throw error;
-  // } finally {
-  //   await queryRunner.release();
-  // }
-  //
-  // return { items, totalCount, status };
 
   async findOrNotFail(commentId: string): Promise<CommentsEntity[]> {
     const query = `SELECT * FROM "Comments" WHERE "id" = $1`;
