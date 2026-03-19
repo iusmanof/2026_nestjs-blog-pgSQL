@@ -21,13 +21,13 @@ import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from './constants/auth-tokens.inject-constants';
-import { SessionRepository } from './infrastructure/session.repository';
+import SessionRepository from './infrastructure/session.repository';
+import EmailConfirmationRepository from './infrastructure/email-confirmation.repository';
 import { UserAccountsConfig } from './config/user-accounts.config';
 import { JwtService } from '@nestjs/jwt';
 import { UserEmailConfirmationEntity } from './domain/user-email-confirmation.entity';
 import { RegisterUserUseCase } from './application/use-cases/auth/register-user.usecase';
 import { CodeGeneratorService } from './application/code-generator.service';
-import { EmailConfirmationRepository } from './infrastructure/email-confirmation.repository';
 import { RefreshSessionUseCase } from './application/use-cases/auth/refresh-session.usecase';
 import { LogoutUseCase } from './application/use-cases/auth/logout.usecase';
 import { JwtStrategy } from './guards/bearer/jwt.stategy';
@@ -38,14 +38,18 @@ import { RegistrationConfirmationUseCase } from './application/use-cases/auth/re
 import { RegistrationEmailResendingUseCase } from './application/use-cases/auth/registration-email-resending.usecase';
 import { GetDevicesQueryHandler } from './application/queries/users/get-devices.query-handler';
 import { DeleteDeviceUseCase } from './application/use-cases/auth/delete-device.command';
+import { SecurityDevicesController } from './api/controllers/security-devices.controller';
+import { DeleteAllDevicesUseCase } from './application/use-cases/auth/delete-all-devices.useacse';
+import CommentsRepository from '@modules/bloggers-platform/comments/infrastructire/comment.repository';
 
-const controllers = [UserController, AuthController];
+const controllers = [UserController, AuthController, SecurityDevicesController];
 const services = [CryptoService, ValidateUserService, CodeGeneratorService];
 const repositories = [
   UsersQueryRepository,
   UsersRepository,
   SessionRepository,
   EmailConfirmationRepository,
+  CommentsRepository,
 ];
 const strategies = [BasicStrategy, LocalStrategy, JwtStrategy];
 const useCases = [
@@ -60,6 +64,7 @@ const useCases = [
   RegistrationConfirmationUseCase,
   RegistrationEmailResendingUseCase,
   DeleteDeviceUseCase,
+  DeleteAllDevicesUseCase,
 ];
 const handlers = [GetUsersQueryHandler, GetUserByIdQueryHandler, GetDevicesQueryHandler];
 

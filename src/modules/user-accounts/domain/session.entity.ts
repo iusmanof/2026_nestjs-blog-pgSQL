@@ -36,6 +36,7 @@ export class SessionEntity {
   @Column({ type: 'timestamp' })
   expiresAt: Date;
 
+  // TODO DDD
   static createNewSession(params: {
     userId: string;
     deviceId: string;
