@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UsersQueryParamsDto, UsersSortBy } from '../api/dto/users-query-params.dto';
-import { SortDirection } from '../../../core/dto/base.query-params.dto';
+import { SortDirection } from '@core/dto/base.query-params.dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UsersEntity } from '../domain/users.entity';
@@ -25,7 +25,7 @@ export class UsersQueryRepository {
         ? user.email.toLowerCase().includes(query.searchEmailTerm.toLowerCase())
         : true;
 
-      return loginMatch || emailMatch; // OR как требует тест
+      return loginMatch || emailMatch;
     });
 
     const sortFieldMap: Record<UsersSortBy, keyof UsersEntity> = {
@@ -59,7 +59,6 @@ export class UsersQueryRepository {
   }
 
   async findByLoginOrEmail(loginOrEmail: string): Promise<UsersEntity | null> {
-    console.log(loginOrEmail);
     const querySql = `SELECT * FROM "Users" WHERE login = $1 OR email = $1;`;
     const result: UsersEntity[] = await this.dataSource.query(querySql, [loginOrEmail]);
     return result[0] ?? null;
