@@ -1,10 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
 import UsersRepository from '../../../infrastructure/users.repository';
-import { EmailService } from '../../../../notification/email.service';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
-import { EmailConfirmationRepository } from '../../../infrastructure/email-confirmation.repository';
+import { EmailService } from '@modules/notification/email.service';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 
 export class RegistrationEmailResendingCommand {
   constructor(public email: string) {}

@@ -1,9 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
-import UsersRepository from '../../../infrastructure/users.repository';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
-import { EmailConfirmationRepository } from '../../../infrastructure/email-confirmation.repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 
 export class RegistrationConfirmationCommand {
   constructor(public code: string) {}
@@ -14,7 +13,6 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<Registra
   constructor(
     private readonly usersQueryRepository: UsersQueryRepository,
     private readonly emailConfirmationRepository: EmailConfirmationRepository,
-    private readonly usersRepository: UsersRepository,
   ) {}
   async execute(command: RegistrationConfirmationCommand): Promise<void> {
     const userEmailConfirmation = await this.emailConfirmationRepository.findByRecoveryCode(

@@ -3,9 +3,9 @@ import { UsersQueryRepository } from 'src/modules/user-accounts/infrastructure/u
 import { NewPasswordDto } from '../../../api/dto/new-password.dto';
 import { CryptoService } from '../../crypto.service';
 import UsersRepository from '../../../infrastructure/users.repository';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
-import { EmailConfirmationRepository } from '../../../infrastructure/email-confirmation.repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 
 export class NewPasswordCommand {
   constructor(public dto: NewPasswordDto) {}
@@ -44,11 +44,5 @@ export class NewPasswordUseCase implements ICommandHandler<NewPasswordCommand> {
     await this.usersRepository.updatePasswordHash(params);
 
     // TODO use DDD
-    // user.passwordHash = await this.cryptoService.createPasswordHash(command.dto.newPassword);
-
-    // user.recoveryCode = undefined;
-    // user.recoveryCodeExpiration = undefined;
-
-    // await this.usersRepository.save(user);
   }
 }
