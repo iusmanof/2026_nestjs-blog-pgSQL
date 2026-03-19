@@ -13,11 +13,10 @@ import type { AuthenticatedRequest } from '../../types/authenticated-request.int
 import { GetDevicesQuery } from '../../application/queries/users/get-devices.query-handler';
 import { DeleteAllDevicesCommand } from '../../application/use-cases/auth/delete-all-devices.useacse';
 import { DeleteDeviceCommand } from '../../application/use-cases/auth/delete-device.command';
-// import { SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('security/devices')
-// TODO Throttle
-// @SkipThrottle()
+@SkipThrottle()
 export class SecurityDevicesController {
   constructor(
     private readonly commandBus: CommandBus,
