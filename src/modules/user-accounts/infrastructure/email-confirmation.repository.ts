@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import { UserEmailConfirmationEntity } from '../domain/user-email-confirmation.entity';
 
 @Injectable()
-export class EmailConfirmationRepository {
+class EmailConfirmationRepository {
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -78,3 +78,5 @@ export class EmailConfirmationRepository {
     await this.dataSource.query(query);
   }
 }
+
+export default EmailConfirmationRepository;

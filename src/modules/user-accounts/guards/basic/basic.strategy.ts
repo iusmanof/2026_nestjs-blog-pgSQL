@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { BasicStrategy as PassportBasicStrategy } from 'passport-http';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +17,7 @@ export class BasicStrategy extends PassportStrategy(PassportBasicStrategy) {
     if (username === this.validUsername && password === this.validPassword) {
       return { username };
     }
-    return null;
+    // return
+    throw new UnauthorizedException();
   }
 }
