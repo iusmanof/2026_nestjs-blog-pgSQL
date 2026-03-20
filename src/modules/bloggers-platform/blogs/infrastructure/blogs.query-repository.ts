@@ -6,6 +6,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { BlogsQueryParamsDto } from '@modules/bloggers-platform/blogs/api/dto/blogs-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
+import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
 
 @Injectable()
 class BlogQueryRepository {
@@ -55,7 +56,7 @@ class BlogQueryRepository {
     };
   }
 
-  async findOrNotFoundFail(id: string): Promise<BlogsEntity> {
+  async findOrNotFoundFail(id: string): Promise<BlogViewDto> {
     const query = `SELECT * FROM "Blogs" WHERE id = $1`;
     const values = [id];
     const entity: BlogsEntity[] = await this.dataSource.query(query, values);

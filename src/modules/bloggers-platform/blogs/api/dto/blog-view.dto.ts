@@ -1,5 +1,3 @@
-import { BlogsEntity } from '../../domain/blogs.entity';
-
 export class BlogViewDto {
   id: string;
   name: string;
@@ -8,7 +6,7 @@ export class BlogViewDto {
   isMembership: boolean;
   createdAt: Date;
 
-  static mapToView = (blog: BlogsEntity): BlogViewDto => {
+  static mapToView = (blog: BlogViewDto): BlogViewDto => {
     return {
       id: blog.id,
       name: blog.name,
