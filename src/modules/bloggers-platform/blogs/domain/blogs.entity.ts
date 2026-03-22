@@ -53,11 +53,17 @@ export class BlogsEntity {
     return blog;
   }
 
-  update(dto: UpdateBlogDto) {
+  changeDetails(dto: UpdateBlogDto) {
     if (dto.name) this.name = dto.name;
     if (dto.description) this.description = dto.description;
     if (dto.websiteUrl) this.websiteUrl = dto.websiteUrl;
     this.validateBlog();
+  }
+
+  delete() {
+    if (this.posts && this.posts.length > 0) {
+      throw new Error('Cannot delete blog with posts');
+    }
   }
 
   // invariant

@@ -26,7 +26,8 @@ class BlogsRepository {
     blog.id = savedBlog.id;
     return result[0];
   }
-  async findById(id: string): Promise<BlogsEntity> {
+
+  async findByIdOrFail(id: string): Promise<BlogsEntity> {
     const query = `SELECT * FROM "Blogs" WHERE id = $1`;
     const values = [id];
     const result: BlogsEntity[] = await this.dataSource.query(query, values);
@@ -39,12 +40,6 @@ class BlogsRepository {
     }
     return BlogsEntity.restore(result[0]);
   }
-  // async update(id: string, dto: UpdateBlogDto): Promise<boolean> {
-  //   const query = `UPDATE "Blogs" SET "name" = $2, "description" = $3, "websiteUrl" = $4 WHERE "id" = $1 RETURNING "id"`;
-  //   const values = [id, dto.name, dto.description, dto.websiteUrl];
-  //   const result: [{ id: string }][] = await this.dataSource.query(query, values);
-  //   return result[0].length > 0;
-  // }
 
   async update(blog: BlogsEntity): Promise<void> {
     const query = `UPDATE "Blogs" SET "name" = $2, "description" = $3, "websiteUrl" = $4 WHERE "id" = $1 RETURNING "id"`;
@@ -52,11 +47,10 @@ class BlogsRepository {
     await this.dataSource.query(query, values);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const query = `DELETE FROM "Blogs" WHERE "id" = $1 RETURNING "id"`;
+  async delete(id: string): Promise<void> {
+    const query = `DELETE FROM "Blogs" WHERE "id" = $1"`;
     const values = [id];
-    const result: [{ id: string }][] = await this.dataSource.query(query, values);
-    return result[0].length > 0;
+    await this.dataSource.query(query, values);
   }
 
   async deleteAll() {
