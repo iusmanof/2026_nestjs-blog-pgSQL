@@ -8,6 +8,7 @@ import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-c
 import { CodeGeneratorService } from '../../code-generator.service';
 import { EmailService } from '@modules/notification/email.service';
 import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
+import { UsersEntity } from '@user-accounts/domain/users.entity';
 
 export class RegisterUserCommand {
   constructor(public body: RegistrationUserInputDto) {}
@@ -46,11 +47,13 @@ export class RegisterUserUseCase implements ICommandHandler<RegisterUserCommand>
 
     const passwordHash = await this.cryptoService.createPasswordHash(command.body.password);
 
-    const user = await this.usersRepository.create({
+    const createUser = await this.usersRepository.save({
       login: command.body.login,
       email: command.body.email,
       passwordHash,
     });
+
+    const user = UsersEntity.create(createUser);
 
     // TODO find all code connected with expiresAt and through put in service
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60);

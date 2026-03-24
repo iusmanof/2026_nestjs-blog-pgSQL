@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { SessionEntity } from './session.entity';
 import { UserEmailConfirmationEntity } from './user-email-confirmation.entity';
+import { CreateUserEntityDto } from '@user-accounts/domain/dto/create-user-entity.dto';
 
 @Entity({ name: 'Users' })
 export class UsersEntity {
@@ -24,4 +25,21 @@ export class UsersEntity {
 
   @OneToMany(() => UserEmailConfirmationEntity, (confirmation) => confirmation.user)
   emailConfirmations: UserEmailConfirmationEntity[];
+
+  static create(params: CreateUserEntityDto) {
+    const user = new UsersEntity();
+    user.login = params.login;
+    user.email = params.email;
+    user.passwordHash = params.passwordHash;
+
+    user.validate();
+    return user;
+  }
+
+  delete() {}
+  private validate() {
+    if (!this.login || this.login.length < 2) {
+      throw new Error('invalid login');
+    }
+  }
 }

@@ -11,7 +11,7 @@ class UsersRepository {
     protected dataSource: DataSource,
   ) {}
 
-  async create(dto: UserDbType) {
+  async save(dto: UserDbType) {
     const query = `INSERT INTO "Users"(login, email, "passwordHash")
                    VALUES ( $1, $2, $3 ) 
                    RETURNING *;`;
@@ -35,7 +35,7 @@ class UsersRepository {
     await this.dataSource.query(query, values);
   }
   // TODO delete if not necessary
-  async save(user: UsersEntity): Promise<UsersEntity> {
+  async update(user: UsersEntity): Promise<UsersEntity> {
     const query = `
     UPDATE "Users"
     SET

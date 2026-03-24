@@ -3,6 +3,7 @@ import { CreateUserDto } from '../../../api/dto/create-user.dto';
 import { CryptoService } from '../../crypto.service';
 import UsersRepository from '../../../infrastructure/users.repository';
 import { UserViewDto } from '../../../api/dto/user-view.dto';
+import { UsersEntity } from '@user-accounts/domain/users.entity';
 
 export class CreateUserCommand {
   constructor(public dto: CreateUserDto) {}
@@ -22,8 +23,12 @@ export class CreateUserUseCase implements ICommandHandler<CreateUserCommand, Use
       email: command.dto.email,
       passwordHash: passwordHash,
     };
+    const user = UsersEntity.create(createUser);
 
-    const entity = await this.usersRepository.create(createUser);
-    return UserViewDto.mapToView(entity);
+    await this.usersRepository.save(user);
+    return UserViewDto.mapToView(user);
+
+    // const entity = await this.usersRepository.create(createUser);
+    // return UserViewDto.mapToView(entity);
   }
 }

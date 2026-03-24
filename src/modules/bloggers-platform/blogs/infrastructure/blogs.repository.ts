@@ -48,7 +48,7 @@ class BlogsRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const query = `DELETE FROM "Blogs" WHERE "id" = $1"`;
+    const query = `DELETE FROM "Blogs" WHERE "id" = $1`;
     const values = [id];
     await this.dataSource.query(query, values);
   }

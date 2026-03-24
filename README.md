@@ -14,12 +14,25 @@
     blogs-public.controller.ts
   /application
     /queries
-      get-blog-by-id.query-handler.ts
-      get-blogs.query-handler.ts
+      get-device.query-handler.ts
+      get-user-by-id.query-handler.ts
+      get-users.query-handler.ts
     /use-cases
-      create-blog.usecase.ts
-      delete-blog.usecase.ts
-      update-blog.usecase.ts
+      /auth
+        delete-all-devices
+        delete-device
+        logout
+        new-password
+        password-recovery
+        refresh-session
+        register-user
+        registr-confirm
+        registr-email
+            
+      /users  
+        create-user.usecase.ts
+        delete-user.usecase.ts
+
   /domain
     blogs.entity.ts
   /infra
