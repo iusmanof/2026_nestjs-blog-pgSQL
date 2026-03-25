@@ -12,19 +12,15 @@ class CommentsRepository {
     protected dataSource: DataSource,
   ) {}
 
-  async create(
-    postId: string,
-    userId: string,
-    login: string,
-    content: string,
-  ): Promise<CommentsEntity> {
-    const query = `INSERT INTO "Comments" ("content", "postId", "userId", "userLogin", "likesCount", "dislikesCount")
-      VALUES ($1, $2, $3, $4, $5, $6)
+  async create(postId: string, userId: string, content: string): Promise<CommentsEntity> {
+    const query = `INSERT INTO "Comments"  ("content", "postId", "userId", "likesCount", "dislikesCount")
+      VALUES ($1, $2, $3, $4, $5)
         RETURNING *`;
 
-    const values = [content, postId, userId, login, 0, 0];
+    const values = [content, postId, userId, 0, 0];
 
     const result: CommentsEntity[] = await this.dataSource.query(query, values);
+
     return result[0];
   }
 

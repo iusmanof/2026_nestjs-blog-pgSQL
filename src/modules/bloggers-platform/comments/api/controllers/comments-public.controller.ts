@@ -17,7 +17,8 @@ class CommentsPublicController {
     @Req() req: AuthenticatedRequest,
   ): Promise<CommentViewDto> {
     const userId = req.user?.id;
-    return this.queryBus.execute(new GetCommentByIdQuery(commentId, userId));
+    const login = req.user?.login;
+    return this.queryBus.execute(new GetCommentByIdQuery(commentId, login, userId));
   }
 }
 

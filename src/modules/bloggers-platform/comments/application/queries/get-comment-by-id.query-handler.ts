@@ -3,10 +3,12 @@ import { DomainException, Extension } from '@core/exceptions/filters/domain-exce
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import { CommentViewDto } from '../../api/dto/comment-view.dto';
 import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
+import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 
 export class GetCommentByIdQuery {
   constructor(
     public commentId: string,
+    public login?: string,
     public userId?: string,
   ) {}
 }
@@ -20,8 +22,7 @@ export class GetCommentByIdQueryHandler implements IQueryHandler<
 
   async execute(query: GetCommentByIdQuery): Promise<CommentViewDto> {
     const { userId, commentId } = query;
-    const comment = await this.commentsQueryRepository.findById(commentId);
-
+    const comment: CommentsEntity = await this.commentsQueryRepository.findById(commentId);
     if (!comment) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -29,8 +30,7 @@ export class GetCommentByIdQueryHandler implements IQueryHandler<
         extensions: [new Extension('Comment not found', 'commentId')],
       });
     }
-
     const myStatus = await this.commentsQueryRepository.findStatusByUserId(commentId, userId);
-    return CommentViewDto.mapToViewWithCurrentStatus(comment, myStatus);
+    return CommentViewDto.mapToView(comment, myStatus);
   }
 }

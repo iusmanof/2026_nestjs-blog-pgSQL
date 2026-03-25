@@ -15,9 +15,10 @@ class CommentsQueryRepository {
   ) {}
 
   async findById(commentId: string): Promise<CommentsEntity> {
-    const query = `SELECT * FROM "Comments" WHERE "id" = $1`;
-    const values = [commentId];
-    const result: CommentsEntity[] = await this.dataSource.query(query, values);
+    const query = `SELECT c.id, c.content, c."createdAt",c."likesCount", c."dislikesCount", c."userId", u.login AS "userLogin"
+                   FROM "Comments" c LEFT JOIN "Users" u ON u.id = c."userId" WHERE c.id = $1`;
+
+    const result: CommentsEntity[] = await this.dataSource.query(query, [commentId]);
     return result[0] ?? null;
   }
 
@@ -38,10 +39,12 @@ class CommentsQueryRepository {
       const totalCount = Number(countResult[0].count);
 
       const items = (await queryRunner.query(
-        `SELECT * FROM "Comments"
-       WHERE "postId" = $1
-       ORDER BY "${sortBy}" ${sortDirection}
-       LIMIT $2 OFFSET $3`,
+        `SELECT c.*, u.login AS "userLogin"
+         FROM "Comments" c
+                JOIN "Users" u ON u.id = c."userId"
+         WHERE c."postId" = $1
+         ORDER BY "${sortBy}" ${sortDirection}
+         LIMIT $2 OFFSET $3`,
         [postId, limit, offset],
       )) as CommentsEntity[];
 

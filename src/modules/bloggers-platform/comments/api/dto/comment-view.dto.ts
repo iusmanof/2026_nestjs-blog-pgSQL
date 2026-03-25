@@ -2,6 +2,16 @@ import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comme
 import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 import { PostPaginatedViewDto } from '@modules/bloggers-platform/posts/api/dto/post-paginated.view.dto';
 
+export type CommentWithUserLogin = {
+  id: string;
+  content: string;
+  createdAt: string;
+  likesCount: number;
+  dislikesCount: number;
+  userId: string;
+  userLogin: string;
+};
+
 interface PaginatedCommentsArgs {
   items: CommentsEntity[];
   page: number;
@@ -26,8 +36,26 @@ export class CommentViewDto {
 
   static mapToViewWithCurrentStatus = (
     comment: CommentsEntity,
+    userLogin: string,
     currentStatus: LikeStatus,
   ): CommentViewDto => {
+    return {
+      id: comment.id.toString(),
+      content: comment.content,
+      commentatorInfo: {
+        userId: comment.userId.toString(),
+        userLogin: userLogin,
+      },
+      createdAt: comment.createdAt,
+      likesInfo: {
+        likesCount: comment.likesCount,
+        dislikesCount: comment.dislikesCount,
+        myStatus: currentStatus,
+      },
+    };
+  };
+
+  static mapToView = (comment: CommentsEntity, currentStatus: LikeStatus): CommentViewDto => {
     return {
       id: comment.id.toString(),
       content: comment.content,
@@ -53,7 +81,11 @@ export class CommentViewDto {
   }: PaginatedCommentsArgs) {
     return PostPaginatedViewDto.mapToView({
       items: items.map((comment) =>
-        CommentViewDto.mapToViewWithCurrentStatus(comment, statusMap.get(comment.id) || 'None'),
+        CommentViewDto.mapToViewWithCurrentStatus(
+          comment,
+          comment.userLogin,
+          statusMap.get(comment.id) || 'None',
+        ),
       ),
       page,
       pageSize,

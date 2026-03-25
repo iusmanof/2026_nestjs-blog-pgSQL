@@ -9,9 +9,6 @@ export class CommentsEntity {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'uuid' })
-  userId: string;
-
   @Column({ type: 'text' })
   userLogin: string;
 
@@ -30,4 +27,8 @@ export class CommentsEntity {
 
   @Column({ type: 'uuid' })
   postId: string;
+
+  // TODO @ManyToOne(() => UserEntity)
+  @Column({ type: 'uuid' })
+  userId: string;
 }

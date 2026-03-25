@@ -54,12 +54,12 @@ CREATE TABLE IF NOT EXISTS "Comments" (
                                           id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
                                           content text NOT NULL,
                                           "userId" uuid NOT NULL,
-                                          "userLogin" text NOT NULL,
                                           "likesCount" int DEFAULT 0,
                                           "dislikesCount" int DEFAULT 0,
                                           "createdAt" timestamp DEFAULT CURRENT_TIMESTAMP,
                                           "postId" uuid NOT NULL,
-                                          CONSTRAINT fk_comments_post FOREIGN KEY ("postId") REFERENCES "Posts"(id) ON DELETE CASCADE
+                                          CONSTRAINT fk_comments_post FOREIGN KEY ("postId") REFERENCES "Posts"(id) ON DELETE CASCADE,
+                                          CONSTRAINT fk_users FOREIGN KEY ("userId") REFERENCES "Users"(id) ON DELETE CASCADE
 );
 
 CREATE TYPE "like_status_enum" AS ENUM ('Like','Dislike','None');

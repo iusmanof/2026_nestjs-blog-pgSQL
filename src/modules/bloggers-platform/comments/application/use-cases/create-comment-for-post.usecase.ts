@@ -24,7 +24,7 @@ export class CreateCommentForPostUseCase implements ICommandHandler<CreateCommen
 
   async execute(command: CreateCommentForPostCommand): Promise<CommentViewDto> {
     const { postId, userId, login, dto } = command;
-
+    const userLogin = login || 'Unknown';
     const checkedPostId = await this.postsQueryRepository.findOrNotFoundFail(postId);
 
     if (!checkedPostId.length) {
@@ -35,8 +35,7 @@ export class CreateCommentForPostUseCase implements ICommandHandler<CreateCommen
       });
     }
 
-    const entity = await this.commentsRepository.create(postId, userId, login, dto.content);
-
-    return CommentViewDto.mapToViewWithCurrentStatus(entity, 'None');
+    const entity = await this.commentsRepository.create(postId, userId, dto.content);
+    return CommentViewDto.mapToViewWithCurrentStatus(entity, userLogin, 'None');
   }
 }

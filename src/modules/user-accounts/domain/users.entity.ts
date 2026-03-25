@@ -24,4 +24,6 @@ export class UsersEntity {
 
   @OneToMany(() => UserEmailConfirmationEntity, (confirmation) => confirmation.user)
   emailConfirmations: UserEmailConfirmationEntity[];
+
+  // @OneToMany(() => CommentsEntity)
 }
