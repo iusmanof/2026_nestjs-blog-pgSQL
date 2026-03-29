@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { UsersQueryParamsDto, UsersSortBy } from '../api/dto/users-query-params.dto';
-import { SortDirection } from '@core/dto/base.query-params.dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UsersEntity } from '../domain/users.entity';
+import { UserDataViewDto } from '@user-accounts/api/dto/user-data-view.dto';
+import { UserRaw } from '@user-accounts/types/user-raw.type';
+import { SortDirection } from '@core/dto/base.query-params.dto';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -13,67 +15,97 @@ export class UsersQueryRepository {
   ) {}
 
   async getAll(query: UsersQueryParamsDto) {
-    const allUsers: UsersEntity[] = await this.dataSource.query(
-      `SELECT id, login, email, "createdAt" FROM "Users"`,
-    );
+    const {
+      sortBy = 'createdAt',
+      sortDirection = 'desc',
+      pageNumber = 1,
+      pageSize = 10,
+      searchLoginTerm,
+      searchEmailTerm,
+    } = query;
 
-    const filtered = allUsers.filter((user) => {
-      const loginMatch = query.searchLoginTerm
-        ? user.login.toLowerCase().includes(query.searchLoginTerm.toLowerCase())
-        : true;
-      const emailMatch = query.searchEmailTerm
-        ? user.email.toLowerCase().includes(query.searchEmailTerm.toLowerCase())
-        : true;
+    const qb = this.dataSource
+      .getRepository(UsersEntity)
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.login', 'user.email', 'user.createdAt']);
 
-      return loginMatch || emailMatch;
-    });
+    if (searchLoginTerm || searchEmailTerm) {
+      qb.andWhere(
+        `(
+      user.login ILIKE :login
+      OR user.email ILIKE :email
+    )`,
+        {
+          login: `%${searchLoginTerm ?? ''}%`,
+          email: `%${searchEmailTerm ?? ''}%`,
+        },
+      );
+    }
 
-    const sortFieldMap: Record<UsersSortBy, keyof UsersEntity> = {
-      login: 'login',
-      email: 'email',
-      createdAt: 'createdAt',
-    };
-    const sortField = sortFieldMap[query.sortBy] ?? 'createdAt';
+    const direction = sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+    if (sortBy === UsersSortBy.CreatedAt) {
+      qb.orderBy(`user.${sortBy}`, direction);
+    }
+    if (sortBy === UsersSortBy.Login) {
+      qb.orderBy(`user.${sortBy} COLLATE "C"`, direction);
+    }
+    if (sortBy === UsersSortBy.Email) {
+      qb.orderBy(`user.${sortBy} COLLATE "C"`, direction);
+    }
 
-    filtered.sort((a, b) => {
-      const dir = query.sortDirection === SortDirection.Asc ? 1 : -1;
+    const skip = (pageNumber - 1) * pageSize;
+    qb.skip(skip).take(pageSize);
 
-      if (a[sortField] < b[sortField]) return -1 * dir;
-      if (a[sortField] > b[sortField]) return 1 * dir;
+    const [items, totalCount] = await qb.getManyAndCount();
 
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    });
-
-    const totalCount = filtered.length;
-    const pagesCount = Math.ceil(totalCount / query.pageSize);
-    const start = query.calculateSkip();
-    const items = filtered.slice(start, start + query.pageSize);
+    const pagesCount = Math.ceil(totalCount / pageSize);
 
     return {
-      items,
-      totalCount,
-      page: query.pageNumber,
-      pageSize: query.pageSize,
       pagesCount,
+      page: pageNumber,
+      pageSize,
+      totalCount,
+      items,
     };
   }
 
-  async findByLoginOrEmail(loginOrEmail: string): Promise<UsersEntity | null> {
-    const querySql = `SELECT * FROM "Users" WHERE login = $1 OR email = $1;`;
-    const result: UsersEntity[] = await this.dataSource.query(querySql, [loginOrEmail]);
-    return result[0] ?? null;
-  }
-  async findById(id: string): Promise<UsersEntity | null> {
-    const query = `SELECT * FROM "Users" WHERE id = $1`;
-    const values = [id];
-    const result: UsersEntity[] = await this.dataSource.query(query, values);
-    return result.length ? result[0] : null;
+  async findByLoginOrEmail(loginOrEmail: string): Promise<UserDataViewDto | null> {
+    const result: UserRaw | undefined = await this.dataSource
+      .createQueryBuilder()
+      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
+      .from('Users', 'u')
+      .where('u.login = :loginOrEmail', { loginOrEmail })
+      .orWhere('u.email = :email', { email: loginOrEmail })
+      .getRawOne();
+
+    if (!result) return null;
+
+    return UserDataViewDto.map(result);
   }
 
-  async findByEmail(email: string): Promise<UsersEntity | null> {
-    const query = `SELECT * FROM "Users" WHERE email = $1;`;
-    const values = [email];
-    const result: UsersEntity[] = await this.dataSource.query(query, values);
-    return result[0] ?? null;
+  async findById(id: string): Promise<UserDataViewDto | null> {
+    const result: UserRaw | undefined = await this.dataSource
+      .createQueryBuilder()
+      .select(['u.id', 'u.login', 'u.email', 'u.createdAt'])
+      .from('Users', 'u')
+      .where('u.id = :id', { id })
+      .getRawOne();
+
+    if (!result) return null;
+
+    return UserDataViewDto.map(result);
+  }
+
+  async findByEmail(email: string): Promise<UserDataViewDto | null> {
+    const result: UserRaw | undefined = await this.dataSource
+      .createQueryBuilder()
+      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
+      .from('Users', 'u')
+      .where('u.email = :email', { email })
+      .getRawOne();
+
+    if (!result) return null;
+
+    return UserDataViewDto.map(result);
   }
 }

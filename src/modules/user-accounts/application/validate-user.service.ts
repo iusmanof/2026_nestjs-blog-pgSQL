@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { CryptoService } from './crypto.service';
-import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UserContextDto } from '../dto/user-context.dto';
+import UsersRepository from '@user-accounts/infrastructure/users.repository';
 
 @Injectable()
 export class ValidateUserService {
   constructor(
-    private readonly usersQueryRepository: UsersQueryRepository,
+    private readonly usersRepository: UsersRepository,
     private readonly cryptoService: CryptoService,
   ) {}
 
   async validate(loginOrEmail: string, password: string): Promise<UserContextDto | null> {
-    const user = await this.usersQueryRepository.findByLoginOrEmail(loginOrEmail);
+    const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
 
     if (!user?.passwordHash) {
       return null;

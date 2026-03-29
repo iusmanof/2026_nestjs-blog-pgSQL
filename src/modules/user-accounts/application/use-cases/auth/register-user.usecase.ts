@@ -47,18 +47,20 @@ export class RegisterUserUseCase implements ICommandHandler<RegisterUserCommand>
 
     const passwordHash = await this.cryptoService.createPasswordHash(command.body.password);
 
-    const createUser = await this.usersRepository.save({
+    const userEntity = UsersEntity.create({
       login: command.body.login,
       email: command.body.email,
       passwordHash,
     });
 
-    const user = UsersEntity.create(createUser);
+    const savedUser = await this.usersRepository.save(userEntity);
+
+    // const user = UsersEntity.create(createUser.raw[0] as CreateUserEntityDto);
 
     // TODO find all code connected with expiresAt and through put in service
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
     await this.emailConfirmationRepository.create({
-      userId: user.id,
+      userId: savedUser.getId(),
       code: confirmCode,
       expiresAt,
     });

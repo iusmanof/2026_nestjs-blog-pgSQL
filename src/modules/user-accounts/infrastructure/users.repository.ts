@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { UserDbType } from '../types/user-db.type';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { UsersEntity } from '../domain/users.entity';
+import { RestoreUserProps, UsersEntity } from '../domain/users.entity';
+import { InsertUserRaw } from '@user-accounts/types/inser-user-raw.type';
 
 @Injectable()
 class UsersRepository {
@@ -11,48 +11,80 @@ class UsersRepository {
     protected dataSource: DataSource,
   ) {}
 
-  async save(dto: UserDbType) {
-    const query = `INSERT INTO "Users"(login, email, "passwordHash")
-                   VALUES ( $1, $2, $3 ) 
-                   RETURNING *;`;
-    const values = [dto.login, dto.email, dto.passwordHash];
-    const result: UsersEntity[] = await this.dataSource.query(query, values);
-    return result[0];
+  async save(entity: UsersEntity): Promise<UsersEntity> {
+    const result = await this.dataSource
+      .createQueryBuilder()
+      .insert()
+      .into('Users')
+      .values({
+        login: entity.getLogin(),
+        email: entity.getEmail(),
+        passwordHash: entity.getPasswordHash(),
+      })
+      .returning(['id', 'login', 'email', 'createdAt'])
+      .execute();
+
+    const rawArray = result.raw as InsertUserRaw[];
+
+    if (!rawArray.length) {
+      throw new Error('Failed to insert user');
+    }
+    const raw = rawArray[0];
+
+    return UsersEntity.restore({
+      id: raw.id,
+      login: raw.login,
+      email: raw.email,
+      createdAt: raw.createdAt,
+    });
+  }
+
+  async findById(id: string): Promise<UsersEntity | null> {
+    const result: RestoreUserProps | undefined = await this.dataSource
+      .createQueryBuilder()
+      .select(['u.id', 'u.login', 'u.email', 'u.createdAt'])
+      .from('Users', 'u')
+      .where('u.id = :id', { id })
+      .getRawOne<RestoreUserProps>();
+
+    if (!result) return null;
+    return UsersEntity.restore(result);
+  }
+
+  async findByLoginOrEmail(loginOrEmail: string): Promise<UsersEntity | null> {
+    const result: RestoreUserProps | undefined = await this.dataSource
+      .createQueryBuilder()
+      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
+      .from('Users', 'u')
+      .where('u.login = :loginOrEmail', { loginOrEmail })
+      .orWhere('u.email = :email', { email: loginOrEmail })
+      .getRawOne<RestoreUserProps>();
+
+    if (!result) return null;
+
+    return UsersEntity.restore(result);
   }
 
   async delete(id: string): Promise<void> {
-    const query = `
-          DELETE FROM "Users"
-          WHERE id = $1;
-      `;
-
-    await this.dataSource.query(query, [id]);
+    await this.dataSource
+      .createQueryBuilder()
+      .delete()
+      .from('Users')
+      .where('id = :id', { id })
+      .execute();
   }
 
   async updatePasswordHash(params: { id: string; passwordHash: string }): Promise<void> {
-    const query = `UPDATE "Users" SET passwordHash = $2 WHERE id = $1`;
-    const values = [params.id];
-    await this.dataSource.query(query, values);
-  }
-  // TODO delete if not necessary
-  async update(user: UsersEntity): Promise<UsersEntity> {
-    const query = `
-    UPDATE "Users"
-    SET
-      login = $1,
-      email = $2,
-      "passwordHash" = $3
-    WHERE id = $4
-    RETURNING *;
-  `;
-    const values = [user.login, user.email, user.passwordHash, user.id];
-    const result: UsersEntity[] = await this.dataSource.query(query, values);
-    return result[0];
+    await this.dataSource
+      .createQueryBuilder()
+      .update('Users', 'u')
+      .set({ passwordHash: params.passwordHash })
+      .where('u.id = :id', { id: params.id })
+      .execute();
   }
 
   async deleteAll() {
-    const query = `DELETE FROM  "Users"`;
-    await this.dataSource.query(query);
+    await this.dataSource.createQueryBuilder().delete().from('Users').execute();
   }
 }
 

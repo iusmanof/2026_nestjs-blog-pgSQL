@@ -23,12 +23,8 @@ export class CreateUserUseCase implements ICommandHandler<CreateUserCommand, Use
       email: command.dto.email,
       passwordHash: passwordHash,
     };
-    const user = UsersEntity.create(createUser);
-
-    await this.usersRepository.save(user);
-    return UserViewDto.mapToView(user);
-
-    // const entity = await this.usersRepository.create(createUser);
-    // return UserViewDto.mapToView(entity);
+    const userEntity = UsersEntity.create(createUser);
+    const savedUserEntity = await this.usersRepository.save(userEntity);
+    return UserViewDto.mapToView(savedUserEntity);
   }
 }

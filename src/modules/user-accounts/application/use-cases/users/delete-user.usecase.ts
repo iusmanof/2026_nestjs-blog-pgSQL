@@ -1,8 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import UsersRepository from '../../../infrastructure/users.repository';
-import { DomainException } from '../../../../../core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '../../../../../core/exceptions/filters/domain-exception-codes';
-import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 
 export class DeleteUserCommand {
   constructor(public id: string) {}
@@ -10,12 +9,9 @@ export class DeleteUserCommand {
 
 @CommandHandler(DeleteUserCommand)
 export class DeleteUserUseCase implements ICommandHandler<DeleteUserCommand, void> {
-  constructor(
-    private readonly usersRepository: UsersRepository,
-    private readonly usersQueryRepository: UsersQueryRepository,
-  ) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
   async execute(command: DeleteUserCommand): Promise<void> {
-    const user = await this.usersQueryRepository.findById(command.id);
+    const user = await this.usersRepository.findById(command.id);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -24,6 +20,7 @@ export class DeleteUserUseCase implements ICommandHandler<DeleteUserCommand, voi
       });
     }
 
+    user.delete();
     await this.usersRepository.delete(command.id);
   }
 }

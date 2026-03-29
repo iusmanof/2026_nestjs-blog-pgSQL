@@ -96,8 +96,15 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
 
     const user = await this.usersQueryRepository.findById(session.userId);
 
-    const newRefreshToken = this.refreshJwt.sign({
-      userId: user!.id,
+    if (!user) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'User not found',
+      });
+    }
+
+    const newRefreshToken: string = this.refreshJwt.sign({
+      userId: user.userId,
       deviceId: session.deviceId,
     });
 
@@ -108,7 +115,7 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
     const lastActiveDate = new Date(decodedNew.iat * 1000);
     const expiresAt = new Date(decodedNew.exp * 1000);
 
-    const accessToken = this.accessJwt.sign({ id: user!.id });
+    const accessToken = this.accessJwt.sign({ id: user.userId });
 
     await this.sessionRepository.useRefreshToken(
       session.deviceId,

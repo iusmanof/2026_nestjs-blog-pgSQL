@@ -27,7 +27,7 @@ import { RefreshSession } from '../../types/refresh-session.type';
 import { RefreshSessionCommand } from '../../application/use-cases/auth/refresh-session.usecase';
 import { LogoutCommand } from '../../application/use-cases/auth/logout.usecase';
 import { JwtAuthGuard } from '../../guards/bearer/jwt-auth.guard';
-import { MeViewDto } from '../dto/me-view.dto';
+import { UserDataViewDto } from '../dto/user-data-view.dto';
 import { GetUserByIdQuery } from '../../application/queries/users/get-user-by-id.query-handler';
 import { PasswordRecoveryDto } from '../dto/password-recovery.dto';
 import { PasswordRecoveryCommand } from '../../application/use-cases/auth/password-recovery.usecase';
@@ -104,7 +104,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getMe(@ExtractUserFromRequest() user: UserContextDto): Promise<MeViewDto> {
+  async getMe(@ExtractUserFromRequest() user: UserContextDto): Promise<UserDataViewDto> {
     return await this.queryBus.execute(new GetUserByIdQuery(user));
   }
 

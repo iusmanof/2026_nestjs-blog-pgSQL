@@ -13,7 +13,7 @@ export class UserEmailConfirmationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => UsersEntity, (user) => user.emailConfirmations, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UsersEntity, (user) => user.emailConfirmations)
   @JoinColumn({ name: 'userId' })
   user: UsersEntity;
 

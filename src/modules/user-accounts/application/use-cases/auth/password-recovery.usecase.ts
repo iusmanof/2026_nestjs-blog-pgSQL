@@ -36,7 +36,7 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
     // TODO expireAt in service
     const recoveryCodeExpiration = new Date(Date.now() + 1000 * 60 * 15);
 
-    const userEmailConfirmation = await this.emailConfirmationRepository.findByUserId(user.id);
+    const userEmailConfirmation = await this.emailConfirmationRepository.findByUserId(user.userId);
 
     if (!userEmailConfirmation) {
       throw new DomainException({
@@ -47,7 +47,7 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
     }
 
     await this.emailConfirmationRepository.updateCode({
-      userId: userEmailConfirmation.id.toString(),
+      userId: userEmailConfirmation.id,
       code: recoveryCode,
       expiresAt: recoveryCodeExpiration,
     });

@@ -30,7 +30,7 @@ export class RegistrationEmailResendingUseCase implements ICommandHandler<Regist
       });
     }
 
-    const userEmailConfirmation = await this.emailConfirmationRepository.findByUserId(user.id);
+    const userEmailConfirmation = await this.emailConfirmationRepository.findByUserId(user.userId);
 
     if (!userEmailConfirmation || userEmailConfirmation.isConfirmed) {
       throw new DomainException({
@@ -42,7 +42,7 @@ export class RegistrationEmailResendingUseCase implements ICommandHandler<Regist
 
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     const newCodeExpiration = new Date(Date.now() + 1000 * 60 * 15);
-    const params = { userId: user.id, code: newCode, expiresAt: newCodeExpiration };
+    const params = { userId: user.userId, code: newCode, expiresAt: newCodeExpiration };
     await this.emailConfirmationRepository.updateCode(params);
     // TODO DDD
     // user.setConfirmationCode(newCode);

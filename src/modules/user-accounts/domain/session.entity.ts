@@ -6,9 +6,7 @@ export class SessionEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => UsersEntity, (user) => user.sessions, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => UsersEntity, (user) => user.sessions)
   @JoinColumn({ name: 'userId' })
   user: UsersEntity;
 
