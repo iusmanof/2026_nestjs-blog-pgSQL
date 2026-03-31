@@ -20,9 +20,8 @@ export class RegistrationEmailResendingUseCase implements ICommandHandler<Regist
   ) {}
 
   async execute(command: RegistrationEmailResendingCommand): Promise<any> {
-    const user = await this.usersQueryRepository.findByEmail(command.email);
-
-    if (!user) {
+    const userEntity = await this.usersRepository.findByEmail(command.email);
+    if (!userEntity) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'User not found',
@@ -30,9 +29,11 @@ export class RegistrationEmailResendingUseCase implements ICommandHandler<Regist
       });
     }
 
-    const userEmailConfirmation = await this.emailConfirmationRepository.findByUserId(user.userId);
+    const userEmailConfirmationEntity = await this.emailConfirmationRepository.findByUserId(
+      userEntity.userId,
+    );
 
-    if (!userEmailConfirmation || userEmailConfirmation.isConfirmed) {
+    if (!userEmailConfirmationEntity || userEmailConfirmationEntity.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'Email already confirmed',
@@ -40,15 +41,9 @@ export class RegistrationEmailResendingUseCase implements ICommandHandler<Regist
       });
     }
 
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const newCodeExpiration = new Date(Date.now() + 1000 * 60 * 15);
-    const params = { userId: user.userId, code: newCode, expiresAt: newCodeExpiration };
-    await this.emailConfirmationRepository.updateCode(params);
-    // TODO DDD
-    // user.setConfirmationCode(newCode);
-    // await this.usersRepository.save(user);
-
-    await this.emailService.sendConfirmationEmail(user.email, newCode);
+    const newCode = userEmailConfirmationEntity.generateNewCode();
+    await this.emailConfirmationRepository.save(userEmailConfirmationEntity);
+    await this.emailService.sendConfirmationEmail(userEntity.email, newCode);
     return;
   }
 }

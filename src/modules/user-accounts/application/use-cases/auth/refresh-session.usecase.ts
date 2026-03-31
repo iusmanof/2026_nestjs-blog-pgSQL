@@ -14,7 +14,7 @@ import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 
 export class RefreshSessionCommand {
-  constructor(public readonly refreshToken: string) {}
+  constructor(public readonly refreshToken: string | undefined) {}
 }
 
 @CommandHandler(RefreshSessionCommand)
@@ -32,9 +32,7 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
   ) {}
 
   async execute(command: RefreshSessionCommand): Promise<RefreshSession> {
-    const { refreshToken } = command;
-
-    if (!refreshToken) {
+    if (!command.refreshToken) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
         message: 'Refresh token not found',
@@ -43,7 +41,7 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
 
     let payload: { deviceId: string; userId: string };
     try {
-      payload = this.refreshJwt.verify(refreshToken, {
+      payload = this.refreshJwt.verify(command.refreshToken, {
         secret: this.config.refreshTokenSecret,
       });
     } catch {
@@ -62,40 +60,27 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       });
     }
 
-    if (session.expiresAt < new Date()) {
+    if (session.isRevoked || session.isExpired()) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
         message: 'Session expired',
       });
     }
 
-    if (session.isRevoked) {
+    const decoded = this.refreshJwt.decode<{ iat: number; exp: number }>(command.refreshToken);
+
+    if (
+      !decoded?.iat ||
+      !decoded?.exp ||
+      session.isRefreshTokenUsed(new Date(decoded.iat * 1000))
+    ) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Token revoked',
-      });
-    }
-
-    const decoded = this.refreshJwt.decode<{ iat: number }>(refreshToken);
-
-    if (!decoded?.iat) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'Invalid refresh token payload',
-      });
-    }
-
-    const tokenIatDate = new Date(decoded.iat * 1000);
-
-    if (session.lastActiveDate.toISOString() !== tokenIatDate.toISOString()) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'Refresh token already used',
+        message: 'Refresh token already used or invalid',
       });
     }
 
     const user = await this.usersQueryRepository.findById(session.userId);
-
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -107,19 +92,17 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       userId: user.userId,
       deviceId: session.deviceId,
     });
+    const newDecoded: { iat: number; exp: number } = this.refreshJwt.decode(newRefreshToken);
 
+    const lastActiveDate = new Date(newDecoded.iat * 1000);
+    const expiresAt = new Date(newDecoded.exp * 1000);
     const newHash = await bcrypt.hash(newRefreshToken, 10);
-
-    const decodedNew: { iat: number; exp: number } = this.refreshJwt.decode(newRefreshToken);
-
-    const lastActiveDate = new Date(decodedNew.iat * 1000);
-    const expiresAt = new Date(decodedNew.exp * 1000);
 
     const accessToken = this.accessJwt.sign({ id: user.userId });
 
     await this.sessionRepository.useRefreshToken(
       session.deviceId,
-      refreshToken,
+      command.refreshToken,
       newHash,
       lastActiveDate,
       expiresAt,

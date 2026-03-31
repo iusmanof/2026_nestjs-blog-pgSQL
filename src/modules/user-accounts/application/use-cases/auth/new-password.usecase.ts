@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersQueryRepository } from 'src/modules/user-accounts/infrastructure/users.query-repository';
 import { NewPasswordDto } from '../../../api/dto/new-password.dto';
 import { CryptoService } from '../../crypto.service';
 import UsersRepository from '../../../infrastructure/users.repository';
@@ -15,34 +14,35 @@ export class NewPasswordCommand {
 export class NewPasswordUseCase implements ICommandHandler<NewPasswordCommand> {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly usersQueryRepository: UsersQueryRepository,
     private readonly emailConfirmationRepository: EmailConfirmationRepository,
     private readonly cryptoService: CryptoService,
   ) {}
 
   async execute(command: NewPasswordCommand): Promise<void> {
-    // const user = await this.usersQueryRepository.findByRecoveryCode(command.dto.recoveryCode);
-    const userEmailConfirmation = await this.emailConfirmationRepository.findByRecoveryCode(
+    const userEmailConfirmationEntity = await this.emailConfirmationRepository.findByRecoveryCode(
       command.dto.recoveryCode,
     );
-
-    if (!userEmailConfirmation) {
+    if (!userEmailConfirmationEntity) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'Invalid recovery code',
       });
     }
+    userEmailConfirmationEntity.confirmRecovery(command.dto.recoveryCode);
 
-    if (!userEmailConfirmation.code || userEmailConfirmation.expiresAt < new Date()) {
+    const user = await this.usersRepository.findById(userEmailConfirmationEntity.userId);
+
+    if (!user) {
       throw new DomainException({
-        code: DomainExceptionCode.PasswordRecoveryCodeExpired,
-        message: 'Recovery code expired',
+        code: DomainExceptionCode.NotFound,
+        message: 'User not found',
       });
     }
-    const newPasswordHash = await this.cryptoService.createPasswordHash(command.dto.newPassword);
-    const params = { id: userEmailConfirmation.id, passwordHash: newPasswordHash };
-    await this.usersRepository.updatePasswordHash(params);
 
-    // TODO use DDD
+    const newPasswordHash = await this.cryptoService.createPasswordHash(command.dto.newPassword);
+    user.updatePassword(newPasswordHash);
+
+    await this.usersRepository.save(user);
+    await this.emailConfirmationRepository.save(userEmailConfirmationEntity);
   }
 }

@@ -8,6 +8,7 @@ export interface RestoreUserProps {
   id: string;
   email: string;
   login: string;
+  passwordHash?: string;
   createdAt: Date;
 }
 
@@ -20,7 +21,7 @@ export class UsersEntity extends BaseCustomEntity {
   email: string;
 
   @Column({ type: 'varchar', length: 255 })
-  passwordHash: string;
+  passwordHash: string | undefined;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
@@ -42,6 +43,29 @@ export class UsersEntity extends BaseCustomEntity {
     return user;
   }
 
+  static createWithConfirmation(params: {
+    login: string;
+    email: string;
+    passwordHash: string;
+    confirmationCode: string;
+    expiresAt: Date;
+  }) {
+    const usersEntity = new UsersEntity();
+
+    usersEntity.login = params.login;
+    usersEntity.email = params.email;
+    usersEntity.passwordHash = params.passwordHash;
+
+    usersEntity.validate();
+    return {
+      usersEntity,
+      confirmation: {
+        code: params.confirmationCode,
+        expiresAt: params.expiresAt,
+      },
+    };
+  }
+
   delete() {}
   private validate() {
     if (!this.login || this.login.length < 2) {
@@ -55,6 +79,7 @@ export class UsersEntity extends BaseCustomEntity {
     user.id = props.id;
     user.login = props.login;
     user.email = props.email;
+    user.passwordHash = props.passwordHash;
     user.createdAt = props.createdAt;
 
     return user;
@@ -74,5 +99,9 @@ export class UsersEntity extends BaseCustomEntity {
 
   getPasswordHash() {
     return this.passwordHash;
+  }
+
+  updatePassword(passwordHash: string) {
+    this.passwordHash = passwordHash;
   }
 }

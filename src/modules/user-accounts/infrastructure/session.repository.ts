@@ -11,10 +11,17 @@ class SessionRepository {
     protected dataSource: DataSource,
   ) {}
   async findByDeviceId(deviceId: string): Promise<SessionEntity | null> {
-    const query = `SELECT * FROM "Session" WHERE "deviceId" = $1 LIMIT 1`;
-    const values = [deviceId];
-    const result: SessionEntity[] = await this.dataSource.query(query, values);
-    return result.length ? result[0] : null;
+    return this.dataSource
+      .getRepository(SessionEntity)
+      .createQueryBuilder('session')
+      .where('session.deviceId = :deviceId', { deviceId })
+      .getOne();
+
+    // TODO delete after test
+    // const query = `SELECT * FROM "Session" WHERE "deviceId" = $1 LIMIT 1`;
+    // const values = [deviceId];
+    // const result: SessionEntity[] = await this.dataSource.query(query, values);
+    // return result.length ? result[0] : null;
   }
 
   async findByUserId(userId: string): Promise<SessionEntity[]> {
@@ -24,38 +31,31 @@ class SessionRepository {
     return await this.dataSource.query(query, values);
   }
 
-  async createSession(dto: {
-    userId: string;
-    deviceId: string;
-    ip: string;
-    title: string;
-    refreshTokenHash: string;
-    lastActiveDate: Date;
-    expiresAt: Date;
-  }): Promise<SessionEntity | null> {
-    const query = `INSERT INTO "Session" (
-        "userId",
-        "deviceId",
-        "ip",
-        "title",
-        "refreshTokenHash",
-        "lastActiveDate",
-        "expiresAt"
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-          RETURNING *
-      `;
-    const values = [
-      dto.userId,
-      dto.deviceId,
-      dto.ip,
-      dto.title,
-      dto.refreshTokenHash,
-      dto.lastActiveDate,
-      dto.expiresAt,
-    ];
-    const result: SessionEntity[] = await this.dataSource.query(query, values);
-    return result.length ? result[0] : null;
+  async save(session: SessionEntity): Promise<void> {
+    await this.dataSource
+      .createQueryBuilder()
+      .insert()
+      .into('Session')
+      .values({
+        userId: session.userId,
+        deviceId: session.deviceId,
+        ip: session.ip,
+        title: session.title,
+        refreshTokenHash: session.refreshTokenHash,
+        lastActiveDate: session.lastActiveDate,
+        expiresAt: session.expiresAt,
+        isRevoked: session.isRevoked,
+      })
+      .execute();
+  }
+
+  async deleteByDeviceId(deviceId: string): Promise<void> {
+    await this.dataSource
+      .createQueryBuilder()
+      .delete()
+      .from('Session')
+      .where('deviceId = :deviceId', { deviceId })
+      .execute();
   }
 
   async useRefreshToken(
@@ -99,12 +99,6 @@ class SessionRepository {
       WHERE "deviceId" = $1
     `;
     await this.dataSource.query(query, [deviceId]);
-  }
-
-  async deleteByDeviceId(deviceId: string): Promise<void> {
-    const query = `DELETE FROM "Session" where "deviceId" = $1;`;
-    const values = [deviceId];
-    await this.dataSource.query(query, values);
   }
 
   async deleteAllExceptCurrent(userId: string, deviceId: string) {

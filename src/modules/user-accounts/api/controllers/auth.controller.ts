@@ -35,6 +35,7 @@ import { NewPasswordDto } from '../dto/new-password.dto';
 import { NewPasswordCommand } from '../../application/use-cases/auth/new-password.usecase';
 import { RegistrationConfirmationCommand } from '../../application/use-cases/auth/registration-confirmation.usecase';
 import { RegistrationEmailResendingCommand } from '../../application/use-cases/auth/registration-email-resending.usecase';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -42,6 +43,18 @@ export class AuthController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
+
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
+    return await this.commandBus.execute(new PasswordRecoveryCommand(dto));
+  }
+
+  @Post('new-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setNewPassword(@Body() dto: NewPasswordDto): Promise<void> {
+    return await this.commandBus.execute(new NewPasswordCommand(dto));
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -55,15 +68,7 @@ export class AuthController {
     const result: LoginResult = await this.commandBus.execute(new LoginCommand(user.id, meta));
 
     res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS);
-
     return { accessToken: result.accessToken };
-  }
-
-  @Post('registration')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  // @Throttle({ default: { limit: 5, ttl: 10010 } })
-  async registration(@Body() body: RegistrationUserInputDto): Promise<void> {
-    return this.commandBus.execute(new RegisterUserCommand(body));
   }
 
   @Post('refresh-token')
@@ -74,10 +79,6 @@ export class AuthController {
   ) {
     const refreshToken = req.cookies?.refreshToken;
 
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not found');
-    }
-
     const result: RefreshSession = await this.commandBus.execute(
       new RefreshSessionCommand(refreshToken),
     );
@@ -85,6 +86,25 @@ export class AuthController {
     res.cookie('refreshToken', result.newRefreshToken, COOKIE_OPTIONS);
 
     return { accessToken: result.accessToken };
+  }
+
+  @Post('registration-confirmation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async confirmRegistration(@Body('code') code: string): Promise<void> {
+    return await this.commandBus.execute(new RegistrationConfirmationCommand(code));
+  }
+
+  @Post('registration')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 10010 } })
+  async registration(@Body() body: RegistrationUserInputDto): Promise<void> {
+    return this.commandBus.execute(new RegisterUserCommand(body));
+  }
+
+  @Post('registration-email-resending')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendRegistrationEmail(@Body('email') email: string): Promise<void> {
+    return await this.commandBus.execute(new RegistrationEmailResendingCommand(email));
   }
 
   @Post('logout')
@@ -106,29 +126,5 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getMe(@ExtractUserFromRequest() user: UserContextDto): Promise<UserDataViewDto> {
     return await this.queryBus.execute(new GetUserByIdQuery(user));
-  }
-
-  @Post('password-recovery')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async passwordRecovery(@Body() dto: PasswordRecoveryDto): Promise<void> {
-    return await this.commandBus.execute(new PasswordRecoveryCommand(dto));
-  }
-
-  @Post('new-password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async setNewPassword(@Body() dto: NewPasswordDto): Promise<void> {
-    return await this.commandBus.execute(new NewPasswordCommand(dto));
-  }
-
-  @Post('registration-confirmation')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async confirmRegistration(@Body('code') code: string): Promise<void> {
-    return await this.commandBus.execute(new RegistrationConfirmationCommand(code));
-  }
-
-  @Post('registration-email-resending')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async resendRegistrationEmail(@Body('email') email: string): Promise<void> {
-    return await this.commandBus.execute(new RegistrationEmailResendingCommand(email));
   }
 }

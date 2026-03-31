@@ -3,6 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { RestoreUserProps, UsersEntity } from '../domain/users.entity';
 import { InsertUserRaw } from '@user-accounts/types/inser-user-raw.type';
+import { UserDataViewDto } from '@user-accounts/api/dto/user-data-view.dto';
+import { UserRaw } from '@user-accounts/types/user-raw.type';
 
 @Injectable()
 class UsersRepository {
@@ -42,7 +44,7 @@ class UsersRepository {
   async findById(id: string): Promise<UsersEntity | null> {
     const result: RestoreUserProps | undefined = await this.dataSource
       .createQueryBuilder()
-      .select(['u.id', 'u.login', 'u.email', 'u.createdAt'])
+      .select(['u.id', 'u.login', 'u.email', 'u.passwordHash', 'u.createdAt'])
       .from('Users', 'u')
       .where('u.id = :id', { id })
       .getRawOne<RestoreUserProps>();
@@ -54,7 +56,13 @@ class UsersRepository {
   async findByLoginOrEmail(loginOrEmail: string): Promise<UsersEntity | null> {
     const result: RestoreUserProps | undefined = await this.dataSource
       .createQueryBuilder()
-      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
+      .select([
+        'u.id as id',
+        'u.login as login',
+        'u.email as email',
+        'u.passwordHash as "passwordHash"',
+        'u.createdAt as "createdAt"',
+      ])
       .from('Users', 'u')
       .where('u.login = :loginOrEmail', { loginOrEmail })
       .orWhere('u.email = :email', { email: loginOrEmail })
@@ -63,6 +71,19 @@ class UsersRepository {
     if (!result) return null;
 
     return UsersEntity.restore(result);
+  }
+
+  async findByEmail(email: string): Promise<UserDataViewDto | null> {
+    const result: UserRaw | undefined = await this.dataSource
+      .createQueryBuilder()
+      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
+      .from('Users', 'u')
+      .where('u.email = :email', { email })
+      .getRawOne();
+
+    if (!result) return null;
+
+    return UserDataViewDto.map(result);
   }
 
   async delete(id: string): Promise<void> {

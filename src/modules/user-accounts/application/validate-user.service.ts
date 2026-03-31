@@ -12,7 +12,6 @@ export class ValidateUserService {
 
   async validate(loginOrEmail: string, password: string): Promise<UserContextDto | null> {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
-
     if (!user?.passwordHash) {
       return null;
     }

@@ -32,7 +32,6 @@ class PostsQueryRepository {
       blogName: 'b."name"',
     };
     const orderBy = sortMap[sortBy] || 'p."createdAt"';
-    console.log(sortMap);
 
     const items: PostsEntityWithBlogRowAndLikesRaw[] = await this.dataSource.query(
       `SELECT p."id", p."title", p."shortDescription", p."content", p."blogId", p."createdAt", b."name" as "blogName",

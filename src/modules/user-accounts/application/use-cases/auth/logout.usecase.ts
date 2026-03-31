@@ -62,7 +62,12 @@ export class LogoutUseCase implements ICommandHandler<LogoutCommand> {
       });
     }
 
-    await this.sessionRepository.revokeSession(payload.deviceId);
+    session.verifyRefreshToken(new Date(payload.iat * 1000));
+    session.markRevoked();
+
+    await this.sessionRepository.save(session);
     await this.sessionRepository.deleteByDeviceId(payload.deviceId);
+    // await this.sessionRepository.revokeSession(payload.deviceId);
+    // await this.sessionRepository.deleteByDeviceId(payload.deviceId);
   }
 }

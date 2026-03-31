@@ -86,7 +86,7 @@ export class UsersQueryRepository {
   async findById(id: string): Promise<UserDataViewDto | null> {
     const result: UserRaw | undefined = await this.dataSource
       .createQueryBuilder()
-      .select(['u.id', 'u.login', 'u.email', 'u.createdAt'])
+      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
       .from('Users', 'u')
       .where('u.id = :id', { id })
       .getRawOne();
@@ -96,6 +96,7 @@ export class UsersQueryRepository {
     return UserDataViewDto.map(result);
   }
 
+  // TODO Delete later
   async findByEmail(email: string): Promise<UserDataViewDto | null> {
     const result: UserRaw | undefined = await this.dataSource
       .createQueryBuilder()

@@ -15,11 +15,10 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<Registra
     private readonly emailConfirmationRepository: EmailConfirmationRepository,
   ) {}
   async execute(command: RegistrationConfirmationCommand): Promise<void> {
-    const userEmailConfirmation = await this.emailConfirmationRepository.findByRecoveryCode(
+    const userEmailConfirmationEntity = await this.emailConfirmationRepository.findByRecoveryCode(
       command.code,
     );
-
-    if (!userEmailConfirmation) {
+    if (!userEmailConfirmationEntity) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'Invalid confirmation code',
@@ -27,25 +26,7 @@ export class RegistrationConfirmationUseCase implements ICommandHandler<Registra
       });
     }
 
-    if (userEmailConfirmation.isConfirmed) {
-      throw new DomainException({
-        code: DomainExceptionCode.BadRequest,
-        message: 'Email already confirmed',
-        extensions: [{ field: 'code', message: 'Email already confirmed' }],
-      });
-    }
-
-    if (userEmailConfirmation.expiresAt && userEmailConfirmation.expiresAt < new Date()) {
-      throw new DomainException({
-        code: DomainExceptionCode.BadRequest,
-        message: 'Confirmation code expired',
-        extensions: [{ field: 'code', message: 'Code expired' }],
-      });
-    }
-
-    // TODO use DDD
-    await this.emailConfirmationRepository.completeConfirmation(userEmailConfirmation.id);
-    // user.confirmEmail();
-    // await this.usersRepository.save(user);
+    userEmailConfirmationEntity.confirmEmail(command.code);
+    await this.emailConfirmationRepository.save(userEmailConfirmationEntity);
   }
 }

@@ -44,32 +44,24 @@ export class RegisterUserUseCase implements ICommandHandler<RegisterUserCommand>
     }
 
     const confirmCode = this.codeGeneratorService.generateNumericCode(4);
-
     const passwordHash = await this.cryptoService.createPasswordHash(command.body.password);
 
-    const userEntity = UsersEntity.create({
+    const { usersEntity, confirmation } = UsersEntity.createWithConfirmation({
       login: command.body.login,
       email: command.body.email,
-      passwordHash,
+      passwordHash: passwordHash,
+      confirmationCode: confirmCode,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60),
     });
 
-    const savedUser = await this.usersRepository.save(userEntity);
+    const savedUser = await this.usersRepository.save(usersEntity);
 
-    // const user = UsersEntity.create(createUser.raw[0] as CreateUserEntityDto);
-
-    // TODO find all code connected with expiresAt and through put in service
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
     await this.emailConfirmationRepository.create({
       userId: savedUser.getId(),
-      code: confirmCode,
-      expiresAt,
+      code: confirmation.code,
+      expiresAt: confirmation.expiresAt,
     });
 
-    // TODO use DDD
-    // createdUser.setConfirmationCode(confirmCode);
-    //
-    // await this.usersRepository.save(createdUser);
-    // TODO send message
     await this.emailService.sendConfirmationEmail(command.body.email, confirmCode);
   }
 }

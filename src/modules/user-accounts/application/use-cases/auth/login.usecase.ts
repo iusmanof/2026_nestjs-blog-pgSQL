@@ -7,9 +7,11 @@ import {
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from '../../../constants/auth-tokens.inject-constants';
 import { LoginMeta } from '../../../decorators/login-meta.decarator';
-import bcrypt from 'bcrypt';
 import { RefreshTokenPayload } from '../../../types/refresh-token-payload.type';
 import SessionRepository from '../../../infrastructure/session.repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import { SessionEntity } from '@user-accounts/domain/session.entity';
 
 export class LoginCommand {
   constructor(
@@ -37,25 +39,46 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
       deviceId,
     });
 
-    // TODO use DDD
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-    const decoded: RefreshTokenPayload = this.refreshJwt.decode(refreshToken);
-    const lastActiveDate = new Date(decoded.iat * 1000);
-    const expiresAt = new Date(decoded.exp * 1000);
+    let decoded: RefreshTokenPayload;
+    try {
+      decoded = this.refreshJwt.verify(refreshToken);
+    } catch {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Invalid refresh token',
+      });
+    }
 
-    await this.sessionRepository.createSession({
+    const session = await SessionEntity.createNewSession({
       userId: command.userId,
       deviceId: deviceId,
       ip: command.meta.ip,
       title: command.meta.userAgent,
-      refreshTokenHash: refreshTokenHash,
-      lastActiveDate: lastActiveDate,
-      expiresAt: expiresAt,
+      refreshToken: refreshToken,
+      iat: decoded.iat,
+      exp: decoded.exp,
     });
 
-    return Promise.resolve({
+    await this.sessionRepository.save(session);
+    // // TODO use DDD
+    // const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+    // const decoded: RefreshTokenPayload = this.refreshJwt.decode(refreshToken);
+    // const lastActiveDate = new Date(decoded.iat * 1000);
+    // const expiresAt = new Date(decoded.exp * 1000);
+    //
+    // await this.sessionRepository.createSession({
+    //   userId: command.userId,
+    //   deviceId: deviceId,
+    //   ip: command.meta.ip,
+    //   title: command.meta.userAgent,
+    //   refreshTokenHash: refreshTokenHash,
+    //   lastActiveDate: lastActiveDate,
+    //   expiresAt: expiresAt,
+    // });
+
+    return {
       accessToken,
       refreshToken,
-    });
+    };
   }
 }

@@ -1,12 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PasswordRecoveryDto } from '../../../api/dto/password-recovery.dto';
-import { UsersQueryRepository } from '../../../infrastructure/users.query-repository';
-import UsersRepository from '../../../infrastructure/users.repository';
 import { EmailService } from '@modules/notification/email.service';
 import { CodeGeneratorService } from '../../code-generator.service';
 import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import UsersRepository from '@user-accounts/infrastructure/users.repository';
 
 export class PasswordRecoveryCommand {
   constructor(public dto: PasswordRecoveryDto) {}
@@ -16,14 +15,12 @@ export class PasswordRecoveryCommand {
 export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecoveryCommand> {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly usersQueryRepository: UsersQueryRepository,
     private readonly emailConfirmationRepository: EmailConfirmationRepository,
     private readonly codeGeneratorService: CodeGeneratorService,
     private readonly emailService: EmailService,
   ) {}
   async execute(command: PasswordRecoveryCommand): Promise<void> {
-    const user = await this.usersQueryRepository.findByEmail(command.dto.email);
-
+    const user = await this.usersRepository.findByEmail(command.dto.email);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
@@ -32,13 +29,10 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
       });
     }
 
-    const recoveryCode = this.codeGeneratorService.generateNumericCode(6);
-    // TODO expireAt in service
-    const recoveryCodeExpiration = new Date(Date.now() + 1000 * 60 * 15);
-
-    const userEmailConfirmation = await this.emailConfirmationRepository.findByUserId(user.userId);
-
-    if (!userEmailConfirmation) {
+    const userEmailConfirmationEntity = await this.emailConfirmationRepository.findByUserId(
+      user.userId,
+    );
+    if (!userEmailConfirmationEntity) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'Confirmation not found',
@@ -46,13 +40,12 @@ export class PasswordRecoveryUseCase implements ICommandHandler<PasswordRecovery
       });
     }
 
-    await this.emailConfirmationRepository.updateCode({
-      userId: userEmailConfirmation.id,
-      code: recoveryCode,
-      expiresAt: recoveryCodeExpiration,
-    });
+    const recoveryCode = this.codeGeneratorService.generateNumericCode(6);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 15);
 
-    // TODO use DDD
+    userEmailConfirmationEntity.updateRecoveryCode(recoveryCode, expiresAt);
+    await this.emailConfirmationRepository.save(userEmailConfirmationEntity);
+
     this.emailService.sendConfirmationEmail(user.email, recoveryCode).catch(console.error);
   }
 }
