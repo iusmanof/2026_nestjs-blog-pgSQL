@@ -51,12 +51,7 @@ class PostsRepository {
     return result.length > 0;
   }
 
-  async setLikeStatus(
-    userId: string,
-    postId: string,
-    // login: string,
-    status: LikeStatus,
-  ): Promise<void> {
+  async setLikeStatus(userId: string, postId: string, status: LikeStatus): Promise<void> {
     const query = `
     INSERT INTO "PostLikes" ("postId","userId","status")
     VALUES ($1,$2,$3)

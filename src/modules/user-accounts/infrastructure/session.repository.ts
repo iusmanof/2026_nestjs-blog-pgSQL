@@ -11,17 +11,15 @@ class SessionRepository {
     protected dataSource: DataSource,
   ) {}
   async findByDeviceId(deviceId: string): Promise<SessionEntity | null> {
-    return this.dataSource
-      .getRepository(SessionEntity)
-      .createQueryBuilder('session')
-      .where('session.deviceId = :deviceId', { deviceId })
+    return await this.dataSource
+      .createQueryBuilder(SessionEntity, 's')
+      .where('s.deviceId = :deviceId', { deviceId })
       .getOne();
-
-    // TODO delete after test
-    // const query = `SELECT * FROM "Session" WHERE "deviceId" = $1 LIMIT 1`;
-    // const values = [deviceId];
-    // const result: SessionEntity[] = await this.dataSource.query(query, values);
-    // return result.length ? result[0] : null;
+    // return this.dataSource
+    //   .getRepository(SessionEntity)
+    //   .createQueryBuilder('session')
+    //   .where('session.deviceId = :deviceId', { deviceId })
+    //   .getOne();
   }
 
   async findByUserId(userId: string): Promise<SessionEntity[]> {
@@ -112,8 +110,7 @@ class SessionRepository {
   }
 
   async deleteAll(): Promise<void> {
-    const query = `DELETE FROM "Session"`;
-    await this.dataSource.query(query);
+    await this.dataSource.createQueryBuilder().delete().from('Session').execute();
   }
 }
 

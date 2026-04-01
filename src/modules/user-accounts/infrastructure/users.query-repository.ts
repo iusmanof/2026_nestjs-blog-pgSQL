@@ -95,18 +95,4 @@ export class UsersQueryRepository {
 
     return UserDataViewDto.map(result);
   }
-
-  // TODO Delete later
-  async findByEmail(email: string): Promise<UserDataViewDto | null> {
-    const result: UserRaw | undefined = await this.dataSource
-      .createQueryBuilder()
-      .select(['u.id as id', 'u.login as login', 'u.email as email', 'u.createdAt as "createdAt"'])
-      .from('Users', 'u')
-      .where('u.email = :email', { email })
-      .getRawOne();
-
-    if (!result) return null;
-
-    return UserDataViewDto.map(result);
-  }
 }

@@ -60,21 +60,6 @@ export class LoginUseCase implements ICommandHandler<LoginCommand> {
     });
 
     await this.sessionRepository.save(session);
-    // // TODO use DDD
-    // const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-    // const decoded: RefreshTokenPayload = this.refreshJwt.decode(refreshToken);
-    // const lastActiveDate = new Date(decoded.iat * 1000);
-    // const expiresAt = new Date(decoded.exp * 1000);
-    //
-    // await this.sessionRepository.createSession({
-    //   userId: command.userId,
-    //   deviceId: deviceId,
-    //   ip: command.meta.ip,
-    //   title: command.meta.userAgent,
-    //   refreshTokenHash: refreshTokenHash,
-    //   lastActiveDate: lastActiveDate,
-    //   expiresAt: expiresAt,
-    // });
 
     return {
       accessToken,

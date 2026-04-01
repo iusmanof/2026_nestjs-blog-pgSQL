@@ -10,25 +10,6 @@ class EmailConfirmationRepository {
     private readonly dataSource: DataSource,
   ) {}
 
-  // async create(params: {
-  //   userId: string;
-  //   code: string;
-  //   expiresAt: Date;
-  // }): Promise<UserEmailConfirmationEntity> {
-  //   const query = `
-  //     INSERT INTO "UserEmailConfirmations"
-  //       ("userId", "code", "isConfirmed", "expiresAt")
-  //     VALUES ($1, $2, false, $3)
-  //     RETURNING *;
-  //   `;
-  //
-  //   const values = [params.userId, params.code, params.expiresAt];
-  //
-  //   const result: UserEmailConfirmationEntity[] = await this.dataSource.query(query, values);
-  //
-  //   return result[0];
-  // }
-
   async create(params: { userId: string; code: string; expiresAt: Date }): Promise<void> {
     await this.dataSource
       .createQueryBuilder()
@@ -44,33 +25,8 @@ class EmailConfirmationRepository {
   }
 
   async save(entity: UserEmailConfirmationEntity): Promise<void> {
+    // insert and update
     await this.dataSource.getRepository(UserEmailConfirmationEntity).save(entity);
-  }
-
-  async updateCode(params: { userId: string; code: string; expiresAt: Date }) {
-    const query = `
-      UPDATE "UserEmailConfirmations"
-      SET "code" = $2,
-          "expiresAt" = $3,
-          "isConfirmed" = $4
-      WHERE "userId" = $1
-    `;
-
-    const values = [params.userId, params.code, params.expiresAt, false];
-
-    await this.dataSource.query(query, values);
-  }
-
-  async completeConfirmation(id: string): Promise<void> {
-    const query = `
-      UPDATE "UserEmailConfirmations"
-      SET "isConfirmed" = $1
-      WHERE "id" = $2
-    `;
-
-    const values = [true, id];
-
-    await this.dataSource.query(query, values);
   }
 
   async findByUserId(userId: string): Promise<UserEmailConfirmationEntity | null> {
@@ -87,22 +43,10 @@ class EmailConfirmationRepository {
       .where('u.code = :code', { code })
       .limit(1)
       .getOne();
-
-    // typeorm 2
-    // return this.dataSource.getRepository(UserEmailConfirmationEntity).findOne({
-    //   where: { code },
-    // });
-
-    // sql
-    // const query = `SELECT * FROM "UserEmailConfirmations" WHERE "code" = $1 LIMIT 1`;
-    // const values = [code];
-    // const result: UserEmailConfirmationEntity[] = await this.dataSource.query(query, values);
-    // return result[0] ?? null;
   }
 
   async deleteAll(): Promise<void> {
-    const query = `DELETE FROM "UserEmailConfirmations"`;
-    await this.dataSource.query(query);
+    await this.dataSource.createQueryBuilder().delete().from('UserEmailConfirmations').execute();
   }
 }
 

@@ -17,7 +17,6 @@ export class BasicStrategy extends PassportStrategy(PassportBasicStrategy) {
     if (username === this.validUsername && password === this.validPassword) {
       return { username };
     }
-    // return
     throw new UnauthorizedException();
   }
 }
