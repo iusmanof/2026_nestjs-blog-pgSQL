@@ -5,6 +5,7 @@ import { CoreConfig } from '@core/core.config';
 import { BloggersPlatformModule } from '@modules/bloggers-platform/bloggers-platform.module';
 import { PostgresqlDatabaseModule } from '@core/database/postgresql-database.module';
 import { DeleteAllDataModule } from '@modules/delete-all-data/delete-all-data.module';
+import { GlobalThrottlerModule } from '@core/throttler/throttler.module';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { DeleteAllDataModule } from '@modules/delete-all-data/delete-all-data.mo
     UserAccountsModule,
     BloggersPlatformModule,
     DeleteAllDataModule,
-    // GlobalThrottlerModule,
+    GlobalThrottlerModule,
   ],
   controllers: [],
   providers: [CoreConfig],

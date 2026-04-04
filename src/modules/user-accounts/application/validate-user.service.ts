@@ -27,7 +27,6 @@ export class ValidateUserService {
 
     return {
       id: user.id.toString(),
-      login: user.login,
     };
   }
 }

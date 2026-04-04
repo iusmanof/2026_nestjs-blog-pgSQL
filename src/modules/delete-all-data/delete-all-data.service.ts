@@ -18,15 +18,17 @@ export class DeleteAllDataService {
   ) {}
 
   async clearAll(): Promise<void> {
-    await Promise.all([
-      this.usersRepository.deleteAll(),
-      this.sessionRepository.deleteAll(),
-      this.emailConfirmationRepository.deleteAll(),
-      this.commentsRepository.deleteAll(),
-      this.commentsRepository.deleteAllCommentsLikes(),
-      this.blogsRepository.deleteAll(),
-      this.postsRepository.deleteAllPostLikes(),
-      this.postsRepository.deleteAll(),
-    ]);
+    await this.emailConfirmationRepository.deleteAll();
+    await this.sessionRepository.deleteAll();
+
+    await this.commentsRepository.deleteAllCommentsLikes();
+    await this.commentsRepository.deleteAll();
+
+    await this.postsRepository.deleteAllPostLikes();
+    await this.postsRepository.deleteAll();
+
+    await this.blogsRepository.deleteAll();
+
+    await this.usersRepository.deleteAll();
   }
 }

@@ -58,6 +58,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @UseGuards(LocalAuthGuard)
   async login(
     @ExtractUserFromRequest() user: UserContextDto,
@@ -90,19 +91,21 @@ export class AuthController {
 
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   async confirmRegistration(@Body('code') code: string): Promise<void> {
     return await this.commandBus.execute(new RegistrationConfirmationCommand(code));
   }
 
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ default: { limit: 5, ttl: 10010 } })
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   async registration(@Body() body: RegistrationUserInputDto): Promise<void> {
     return this.commandBus.execute(new RegisterUserCommand(body));
   }
 
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   async resendRegistrationEmail(@Body('email') email: string): Promise<void> {
     return await this.commandBus.execute(new RegistrationEmailResendingCommand(email));
   }

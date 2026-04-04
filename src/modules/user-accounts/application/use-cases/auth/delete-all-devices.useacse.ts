@@ -19,7 +19,6 @@ export class DeleteAllDevicesUseCase implements ICommandHandler<DeleteAllDevices
 
   async execute(command: DeleteAllDevicesCommand): Promise<void> {
     let payload: { userId: string; deviceId: string };
-
     try {
       payload = this.refreshJwt.verify(command.refreshToken, {
         secret: this.config.refreshTokenSecret,
@@ -27,8 +26,6 @@ export class DeleteAllDevicesUseCase implements ICommandHandler<DeleteAllDevices
     } catch {
       throw new UnauthorizedException();
     }
-
-    // удалить ВСЕ устройства пользователя кроме текущего
     await this.sessionRepository.deleteAllExceptCurrent(payload.userId, payload.deviceId);
   }
 }

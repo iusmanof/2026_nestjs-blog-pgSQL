@@ -44,14 +44,10 @@ export class DeleteDeviceUseCase implements ICommandHandler<DeleteDeviceCommand>
       });
     }
 
-    if (session.userId !== payload.userId) {
-      throw new DomainException({
-        code: DomainExceptionCode.Forbidden,
-        message: 'Permission to access this session',
-        extensions: [{ field: 'session', message: 'Access denied for this session' }],
-      });
-    }
+    session.assertOwnership(payload.userId);
+    session.markRevoked();
 
+    await this.sessionRepository.save(session);
     await this.sessionRepository.deleteByDeviceId(command.deviceId);
   }
 }

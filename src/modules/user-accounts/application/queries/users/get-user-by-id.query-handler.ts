@@ -15,7 +15,6 @@ export class GetUserByIdQueryHandler implements IQueryHandler<GetUserByIdQuery> 
 
   async execute(query: GetUserByIdQuery): Promise<UserDataViewDto> {
     const userDto = await this.usersQueryRepository.findById(query.user.id);
-
     if (!userDto) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,

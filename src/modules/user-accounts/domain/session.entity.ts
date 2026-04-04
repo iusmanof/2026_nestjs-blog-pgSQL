@@ -65,7 +65,7 @@ export class SessionEntity {
   }
 
   isRefreshTokenUsed(iat: Date) {
-    return this.lastActiveDate.toISOString() !== iat.toISOString();
+    return iat.getTime() < this.lastActiveDate.getTime();
   }
   verifyRefreshToken(iat: Date) {
     if (this.isRevoked || this.isRefreshTokenUsed(iat)) {
@@ -75,11 +75,50 @@ export class SessionEntity {
       });
     }
   }
-  getRefreshTokenHash(): string {
-    return this.refreshTokenHash;
-  }
 
   markRevoked() {
+    if (this.isRevoked) {
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        message: 'Session already revoked',
+      });
+    }
+
     this.isRevoked = true;
+  }
+
+  assertOwnership(userId: string) {
+    if (this.userId !== userId) {
+      throw new DomainException({
+        code: DomainExceptionCode.Forbidden,
+        message: 'Permission to access this session',
+        extensions: [{ field: 'session', message: 'Access denied for this session' }],
+      });
+    }
+  }
+
+  async useRefreshToken(params: {
+    oldRefreshToken: string;
+    newRefreshToken: string;
+    iat: Date;
+    exp: Date;
+    newIat: Date;
+    newExp: Date;
+  }): Promise<void> {
+    const isValid = await bcrypt.compare(params.oldRefreshToken, this.refreshTokenHash);
+
+    if (!isValid) {
+      this.markRevoked();
+
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Refresh token reuse detected',
+      });
+    }
+    this.verifyRefreshToken(params.iat);
+    // this.verifyRefreshToken(params.iat);
+    this.refreshTokenHash = await bcrypt.hash(params.newRefreshToken, 10);
+    this.lastActiveDate = params.newIat;
+    this.expiresAt = params.newExp;
   }
 }

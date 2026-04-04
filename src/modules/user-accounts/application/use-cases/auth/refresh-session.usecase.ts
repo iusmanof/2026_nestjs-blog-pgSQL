@@ -1,7 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import bcrypt from 'bcrypt';
 import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
@@ -32,6 +31,7 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
   ) {}
 
   async execute(command: RefreshSessionCommand): Promise<RefreshSession> {
+    // check token
     if (!command.refreshToken) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
@@ -39,6 +39,7 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       });
     }
 
+    // verify token
     let payload: { deviceId: string; userId: string };
     try {
       payload = this.refreshJwt.verify(command.refreshToken, {
@@ -51,22 +52,19 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       });
     }
 
+    // take out session
     const session = await this.sessionRepository.findByDeviceId(payload.deviceId);
 
-    if (!session || session.userId !== payload.userId) {
+    if (!session) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
         message: 'Session not found',
       });
     }
 
-    if (session.isRevoked || session.isExpired()) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'Session expired',
-      });
-    }
+    session?.assertOwnership(payload.userId);
 
+    // take out iat and exp
     const decoded = this.refreshJwt.decode<{ iat: number; exp: number }>(command.refreshToken);
 
     if (
@@ -88,25 +86,33 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       });
     }
 
+    const iatDate = new Date(decoded.iat * 1000);
+    const expDate = new Date(decoded.exp * 1000);
+
+    // generate new refresh token
     const newRefreshToken: string = this.refreshJwt.sign({
       userId: user.userId,
       deviceId: session.deviceId,
     });
     const newDecoded: { iat: number; exp: number } = this.refreshJwt.decode(newRefreshToken);
 
-    const lastActiveDate = new Date(newDecoded.iat * 1000);
-    const expiresAt = new Date(newDecoded.exp * 1000);
-    const newHash = await bcrypt.hash(newRefreshToken, 10);
+    const newIat = new Date(newDecoded.iat * 1000);
+    const newExp = new Date(newDecoded.exp * 1000);
 
-    const accessToken = this.accessJwt.sign({ id: user.userId });
+    await session.useRefreshToken({
+      oldRefreshToken: command.refreshToken,
+      newRefreshToken: newRefreshToken,
+      iat: iatDate,
+      exp: expDate,
+      newIat: newIat,
+      newExp: newExp,
+    });
 
-    await this.sessionRepository.useRefreshToken(
-      session.deviceId,
-      command.refreshToken,
-      newHash,
-      lastActiveDate,
-      expiresAt,
-    );
+    // save session
+    await this.sessionRepository.save(session);
+
+    // generate access token
+    const accessToken = this.accessJwt.sign({ id: payload.deviceId });
 
     return { accessToken, newRefreshToken };
   }
