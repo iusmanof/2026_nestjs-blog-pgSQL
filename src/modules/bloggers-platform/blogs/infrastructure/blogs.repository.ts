@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { BlogsEntity } from '@modules/bloggers-platform/blogs/domain/blogs.entity';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
+import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
 
 @Injectable()
 class BlogsRepository {
@@ -13,49 +13,33 @@ class BlogsRepository {
   ) {}
 
   async save(blog: BlogsEntity): Promise<BlogsEntity> {
-    const query = `INSERT INTO "Blogs"("name","description","websiteUrl","createdAt","isMembership") VALUES($1, $2, $3, $4, $5) RETURNING *`;
-    const values = [
-      blog.getName(),
-      blog.getDescription(),
-      blog.getWebsiteUrl(),
-      blog.getCreatedAt(),
-      blog.getIsMembership(),
-    ];
-    const result: BlogsEntity[] = await this.dataSource.query(query, values);
-    const savedBlog = result[0];
-    blog.id = savedBlog.id;
-    return result[0];
+    return await this.dataSource.getRepository(BlogsEntity).save(blog);
+    // return blog;
   }
 
-  async findByIdOrFail(id: string): Promise<BlogsEntity> {
-    const query = `SELECT * FROM "Blogs" WHERE id = $1`;
-    const values = [id];
-    const result: BlogsEntity[] = await this.dataSource.query(query, values);
-    if (!result.length) {
-      throw new DomainException({
-        code: DomainExceptionCode.NotFound,
-        message: 'Blog not found',
-        extensions: [new Extension('Blog with given id does not exist', 'id')],
-      });
-    }
-    return BlogsEntity.restore(result[0]);
+  async findById(id: string): Promise<BlogsEntity | null> {
+    return await this.dataSource.getRepository(BlogsEntity).findOne({ where: { id: id } });
   }
 
-  async update(blog: BlogsEntity): Promise<void> {
-    const query = `UPDATE "Blogs" SET "name" = $2, "description" = $3, "websiteUrl" = $4 WHERE "id" = $1 RETURNING "id"`;
-    const values = [blog.getId(), blog.getName(), blog.getDescription(), blog.getWebsiteUrl()];
-    await this.dataSource.query(query, values);
+  async findById_DTO(id: string): Promise<BlogViewDto | null> {
+    return await this.dataSource
+      .createQueryBuilder()
+      .select(['b.id'])
+      .from(BlogsEntity, 'b')
+      .where('b.id = :id', { id })
+      .getOne();
   }
 
-  async delete(id: string): Promise<void> {
-    const query = `DELETE FROM "Blogs" WHERE "id" = $1`;
-    const values = [id];
-    await this.dataSource.query(query, values);
+  async ensureCanDelete(id: string): Promise<number> {
+    return await this.dataSource.getRepository(PostsEntity).count({ where: { blogId: id } });
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.dataSource.getRepository(BlogsEntity).delete({ id: id });
   }
 
   async deleteAll() {
-    const query = `DELETE FROM "Blogs" `;
-    await this.dataSource.query(query);
+    await this.dataSource.createQueryBuilder().delete().from('Blogs').execute();
   }
 }
 

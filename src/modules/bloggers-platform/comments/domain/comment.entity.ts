@@ -30,4 +30,16 @@ export class CommentsEntity {
 
   @Column({ type: 'uuid' })
   postId: string;
+
+  static create(params: { postId: string; userId: string; login: string; content: string }) {
+    const comment = new CommentsEntity();
+
+    comment.content = params.content;
+    comment.postId = params.postId;
+    comment.userId = params.userId;
+    comment.userLogin = params.login;
+    comment.createdAt = new Date();
+
+    return comment;
+  }
 }

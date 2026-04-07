@@ -2,43 +2,31 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
   Put,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CreateBlogDto } from '../dto/create-blog.dto';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus } from '@nestjs/cqrs';
 import { BasicAuthGuard } from '@user-accounts/guards/basic/basic.guard';
 import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
 import { CreateBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/create-blog.usecase';
 import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/update-blog.dto';
 import { UpdateBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/update-blog.usecase';
 import { DeleteBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/delete-blog-use.case';
-import { BlogsQueryParamsDto } from '@modules/bloggers-platform/blogs/api/dto/blogs-query-params.dto';
-import { GetBlogsQuery } from '@modules/bloggers-platform/blogs/application/queries/get-blogs.query-handler';
 import { CreatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/create-post-for-blog.dto';
 import { CreatePostForBlogCommand } from '@modules/bloggers-platform/posts/application/use-cases/create-post-for-blog.usecase';
 import { UpdatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/update-post-for-blog.dto';
 import { UpdatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
-import { DeletePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/delete-post.usecase';
+import { DeletePostCommand } from '@modules/bloggers-platform/blogs/application/use-cases/delete-post.usecase-specified-by-id';
 
 @UseGuards(BasicAuthGuard)
 @Controller('/sa/blogs')
 class BlogsController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  getAllBlogs(@Query() query: BlogsQueryParamsDto) {
-    return this.queryBus.execute(new GetBlogsQuery(query));
-  }
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

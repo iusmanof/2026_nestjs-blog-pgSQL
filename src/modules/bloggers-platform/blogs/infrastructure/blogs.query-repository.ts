@@ -56,6 +56,7 @@ class BlogQueryRepository {
     };
   }
 
+  // TODO use TypeORM
   async findOrNotFoundFail(id: string): Promise<BlogViewDto> {
     const query = `SELECT * FROM "Blogs" WHERE id = $1`;
     const values = [id];

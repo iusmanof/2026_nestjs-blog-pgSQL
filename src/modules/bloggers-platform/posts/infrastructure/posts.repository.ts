@@ -15,6 +15,14 @@ class PostsRepository {
     private readonly blogQueryRepository: BlogQueryRepository,
   ) {}
 
+  async save(post: PostsEntity): Promise<PostsEntity> {
+    return await this.dataSource.getRepository(PostsEntity).save(post);
+  }
+
+  async findById(id: string): Promise<PostsEntity | null> {
+    return await this.dataSource.getRepository(PostsEntity).findOne({ where: { id: id } });
+  }
+
   async create(dto: CreatePostDto): Promise<PostsEntity> {
     await this.blogQueryRepository.findOrNotFoundFail(dto.blogId);
 
@@ -49,6 +57,9 @@ class PostsRepository {
     const values = [id];
     const result: PostsEntity[] = await this.dataSource.query(query, values);
     return result.length > 0;
+  }
+  async remove(id: string): Promise<void> {
+    await this.dataSource.getRepository(PostsEntity).delete({ id: id });
   }
 
   async setLikeStatus(userId: string, postId: string, status: LikeStatus): Promise<void> {

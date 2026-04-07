@@ -12,6 +12,9 @@ class CommentsRepository {
     protected dataSource: DataSource,
   ) {}
 
+  async save(comment: CommentsEntity) {
+    await this.dataSource.getRepository(CommentsEntity).save(comment);
+  }
   async create(
     postId: string,
     userId: string,

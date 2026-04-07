@@ -17,7 +17,7 @@ import { CreatePostUseCase } from '@modules/bloggers-platform/posts/application/
 import BlogsPublicController from '@modules/bloggers-platform/blogs/api/controllers/blogs-public.controller';
 import PostsPublicController from '@modules/bloggers-platform/posts/api/controllers/posts-public.controller';
 import { UpdatePostUseCase } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
-import { DeletePostUseCase } from '@modules/bloggers-platform/posts/application/use-cases/delete-post.usecase';
+import { DeletePostUsecaseSpecifiedById } from '@modules/bloggers-platform/blogs/application/use-cases/delete-post.usecase-specified-by-id';
 import { GetPostByIdQueryHandler } from '@modules/bloggers-platform/posts/application/queries/get-posts-by-id.query-handler';
 import PostsQueryRepository from '@modules/bloggers-platform/posts/infrastructure/posts.query-repository';
 import { GetPostQueryHandler } from '@modules/bloggers-platform/posts/application/queries/get-posts.query-handler';
@@ -37,10 +37,13 @@ import { UpdateCommentUseCase } from '@modules/bloggers-platform/comments/applic
 import { UpdateLikeStatusUseCase } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
 import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 import { UpdateCommentLikeStatusUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment-like-status.usecase';
+import UsersRepository from '@user-accounts/infrastructure/users.repository';
+import BlogsSuperAdminPublicController from '@modules/bloggers-platform/blogs/api/controllers/blogs-sa-public.controller';
 
 const controllers = [
   BlogsController,
   BlogsPublicController,
+  BlogsSuperAdminPublicController,
   PostsController,
   PostsPublicController,
   CommentsController,
@@ -53,6 +56,7 @@ const repositories = [
   PostsQueryRepository,
   CommentsRepository,
   CommentsQueryRepository,
+  UsersRepository,
 ];
 const useCases = [
   CreateBlogUseCase,
@@ -60,7 +64,7 @@ const useCases = [
   DeleteBlogUseCase,
   CreatePostUseCase,
   UpdatePostUseCase,
-  DeletePostUseCase,
+  DeletePostUsecaseSpecifiedById,
   CreatePostForBlogUseCase,
   CreateCommentForPostUseCase,
   UpdateCommentUseCase,

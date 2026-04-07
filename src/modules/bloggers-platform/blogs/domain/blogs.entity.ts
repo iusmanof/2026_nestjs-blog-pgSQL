@@ -2,7 +2,6 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { CreateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/create-blog.dto';
 import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/update-blog.dto';
-import { RawEntityDto } from '@modules/bloggers-platform/blogs/domain/RawEntity.dto';
 
 @Entity({ name: 'Blogs' })
 export class BlogsEntity {
@@ -40,18 +39,6 @@ export class BlogsEntity {
     blog.validateBlog();
     return blog;
   }
-  static restore(raw: RawEntityDto): BlogsEntity {
-    const blog = new BlogsEntity();
-
-    blog.id = raw.id;
-    blog.name = raw.name;
-    blog.description = raw.description;
-    blog.websiteUrl = raw.websiteUrl;
-    blog.createdAt = raw.createdAt;
-    blog.isMembership = raw.isMembership;
-
-    return blog;
-  }
 
   changeDetails(dto: UpdateBlogDto) {
     if (dto.name) this.name = dto.name;
@@ -61,8 +48,8 @@ export class BlogsEntity {
   }
 
   delete() {
-    if (this.posts && this.posts.length > 0) {
-      throw new Error('Cannot delete blog with posts');
+    if (this.isMembership) {
+      throw new Error('Cannot delete membership blog');
     }
   }
 

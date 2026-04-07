@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   HttpCode,
   HttpStatus,
   Param,
@@ -16,7 +15,6 @@ import { BasicAuthGuard } from '@user-accounts/guards/basic/basic.guard';
 import { CreatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/create-post.usecase';
 import { PostViewDto } from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
 import { UpdatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
-import { DeletePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/delete-post.usecase';
 import { JwtAuthGuard } from '@user-accounts/guards/bearer/jwt-auth.guard';
 import { CreateCommentDto } from '@modules/bloggers-platform/comments/api/dto/create-comment.dto';
 import type { AuthenticatedRequest } from '@user-accounts/types/authenticated-request.interface';
@@ -24,6 +22,7 @@ import { CommentViewDto } from '@modules/bloggers-platform/comments/api/dto/comm
 import { CreateCommentForPostCommand } from '@modules/bloggers-platform/comments/application/use-cases/create-comment-for-post.usecase';
 import { UpdateLikeStatusDto } from '@modules/bloggers-platform/posts/api/dto/update-like-status.dto';
 import { UpdateLikeStatusCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
+import { UpdatePostDto } from '@modules/bloggers-platform/posts/api/dto/update-post.dto';
 
 @Controller('/posts')
 class PostsController {
@@ -41,16 +40,16 @@ class PostsController {
   @UseGuards(BasicAuthGuard)
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async updatePost(@Param('id') id: string, @Body() dto: CreatePostDto): Promise<PostViewDto> {
+  async updatePost(@Param('id') id: string, @Body() dto: UpdatePostDto): Promise<PostViewDto> {
     return this.commandBus.execute(new UpdatePostCommand(id, dto));
   }
 
-  @UseGuards(BasicAuthGuard)
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(@Param('id') id: string, @Param('id') blogId: string): Promise<void> {
-    return this.commandBus.execute(new DeletePostCommand(id, blogId));
-  }
+  // @UseGuards(BasicAuthGuard)
+  // @Delete(':postId')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deletePost(@Param('postId') postId: string,): Promise<void> {
+  //   return this.commandBus.execute(new DeletePostCommand( postId));
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Post(':postId/comments')
@@ -63,10 +62,11 @@ class PostsController {
     const userId = req.user?.id;
     const login = req.user?.login;
     return await this.commandBus.execute(
-      new CreateCommentForPostCommand(postId, userId, login, dto),
+      new CreateCommentForPostCommand(userId, login, postId, dto.content),
     );
   }
 
+  // TODO DDD + TypeORM
   @UseGuards(JwtAuthGuard)
   @Put('/:postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)
