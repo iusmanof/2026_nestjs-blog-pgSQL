@@ -39,6 +39,14 @@ export class CreatePostForBlogUseCase implements ICommandHandler<
     const post = await this.postsRepository.save(postEntity);
 
     post.changeDetails(command.dto);
-    return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndLikesRaw);
+    const postDTO = {
+      ...post,
+      blogName: blog.getName(),
+      likesCount: '0',
+      dislikesCount: '0',
+      myStatus: 'None',
+      newestLikes: [],
+    };
+    return PostViewDto.mapToView(postDTO as PostsEntityWithBlogRowAndLikesRaw);
   }
 }

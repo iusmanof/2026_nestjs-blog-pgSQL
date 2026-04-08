@@ -14,7 +14,6 @@ class BlogsRepository {
 
   async save(blog: BlogsEntity): Promise<BlogsEntity> {
     return await this.dataSource.getRepository(BlogsEntity).save(blog);
-    // return blog;
   }
 
   async findById(id: string): Promise<BlogsEntity | null> {

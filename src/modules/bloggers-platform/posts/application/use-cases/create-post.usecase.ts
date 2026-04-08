@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import PostsRepository from '../../infrastructure/posts.repository';
 import { CreatePostDto } from '../../api/dto/create-post.dto';
-import { PostsEntityWithBlogRowAndLikesRaw, PostViewDto } from '../../api/dto/post-view.dto';
+import { PostViewDto } from '../../api/dto/post-view.dto';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
@@ -28,6 +28,22 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand, Pos
 
     const post = PostsEntity.create(dto);
     await this.postsRepository.save(post);
-    return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndLikesRaw);
+    // return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndLikesRaw);
+
+    return {
+      id: post.id,
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      blogId: post.blogId,
+      blogName: blog.name,
+      createdAt: post.createdAt,
+      extendedLikesInfo: {
+        likesCount: 0,
+        dislikesCount: 0,
+        myStatus: 'None',
+        newestLikes: [],
+      },
+    };
   }
 }

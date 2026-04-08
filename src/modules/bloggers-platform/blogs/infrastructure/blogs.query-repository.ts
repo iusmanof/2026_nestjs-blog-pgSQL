@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { BlogsEntity } from '@modules/bloggers-platform/blogs/domain/blogs.entity';
-import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
-import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { BlogsQueryParamsDto } from '@modules/bloggers-platform/blogs/api/dto/blogs-query-params.dto';
+import {
+  BlogsQueryParamsDto,
+  BlogsSortBy,
+} from '@modules/bloggers-platform/blogs/api/dto/blogs-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
 import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
 
@@ -16,59 +17,59 @@ class BlogQueryRepository {
   ) {}
 
   async getAll(query: BlogsQueryParamsDto) {
-    const allBlogs: BlogsEntity[] = await this.dataSource.query(
-      `SELECT id, name, description, "websiteUrl", "createdAt", "isMembership" FROM "Blogs"`,
-    );
+    const {
+      searchNameTerm = null,
+      sortBy = 'createdAt',
+      sortDirection = 'desc',
+      pageNumber = 1,
+      pageSize = 10,
+    } = query;
 
-    const filtered = allBlogs.filter((blog) =>
-      query.searchNameTerm
-        ? blog.name.toLowerCase().includes(query.searchNameTerm.toLowerCase())
-        : true,
-    );
+    const qb = this.dataSource
+      .getRepository(BlogsEntity)
+      .createQueryBuilder('blog')
+      .select([
+        'blog.id',
+        'blog.name',
+        'blog.description',
+        'blog.websiteUrl',
+        'blog.createdAt',
+        'blog.isMembership',
+      ]);
 
-    const sortField = query.sortBy ?? 'createdAt';
-    const sortDir = query.sortDirection === SortDirection.Asc ? 1 : -1;
+    if (searchNameTerm !== null) {
+      qb.andWhere(`blog.name ILIKE :searchName`, {
+        searchName: `%${searchNameTerm}%`,
+      });
+    }
 
-    filtered.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+    const direction = sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
 
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        if (aValue < bValue) return -1 * sortDir;
-        if (aValue > bValue) return 1 * sortDir;
-        return 0;
-      }
+    if (sortBy === BlogsSortBy.Name) {
+      qb.orderBy(`blog.${sortBy} COLLATE "C"`, direction);
+    } else {
+      qb.orderBy(`blog.${sortBy}`, direction);
+    }
 
-      return (aValue < bValue ? -1 : aValue > bValue ? 1 : 0) * sortDir;
-    });
+    // пагинация
+    const skip = (pageNumber - 1) * pageSize;
+    qb.skip(skip).take(pageSize);
 
-    const totalCount = filtered.length;
-    const pagesCount = Math.ceil(totalCount / query.pageSize);
-    const start = (query.pageNumber - 1) * query.pageSize;
-    const items = filtered.slice(start, start + query.pageSize);
+    const [items, totalCount] = await qb.getManyAndCount();
+
+    const pagesCount = Math.ceil(totalCount / pageSize);
 
     return {
-      items,
-      totalCount,
-      page: query.pageNumber,
-      pageSize: query.pageSize,
       pagesCount,
+      page: pageNumber,
+      pageSize,
+      totalCount,
+      items,
     };
   }
 
-  // TODO use TypeORM
-  async findOrNotFoundFail(id: string): Promise<BlogViewDto> {
-    const query = `SELECT * FROM "Blogs" WHERE id = $1`;
-    const values = [id];
-    const entity: BlogsEntity[] = await this.dataSource.query(query, values);
-    if (!entity.length) {
-      throw new DomainException({
-        code: DomainExceptionCode.NotFound,
-        message: 'Blog not found',
-        extensions: [new Extension('Blog with given id does not exist', 'id')],
-      });
-    }
-    return entity[0];
+  async findById(id: string): Promise<BlogViewDto | null> {
+    return await this.dataSource.getRepository(BlogsEntity).findOne({ where: { id: id } });
   }
 }
 

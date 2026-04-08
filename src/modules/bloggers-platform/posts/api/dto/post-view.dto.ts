@@ -1,5 +1,4 @@
 import { LikeStatus } from '../../types/like-status.type';
-import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 
 export type ExtendedLikesInfoViewDto = {
   likesCount: number;
@@ -14,14 +13,20 @@ export type NewestLikeViewDto = {
   addedAt: Date;
 };
 
-export type PostsEntityWithBlogRowAndLikesRaw = PostsEntity & {
+export type PostsEntityWithBlogRowAndLikesRaw = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  createdAt: Date;
+
   blogName: string;
-  likesCount: string; // приходит из query как string
+  likesCount: string;
   dislikesCount: string;
   myStatus: LikeStatus;
   newestLikes: NewestLikeViewDto[];
 };
-
 export class PostViewDto {
   id: string;
   title: string;

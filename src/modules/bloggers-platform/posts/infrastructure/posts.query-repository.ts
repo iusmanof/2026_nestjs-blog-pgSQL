@@ -4,7 +4,11 @@ import { DataSource } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { PostsQueryParamsDto } from '@modules/bloggers-platform/posts/api/dto/posts-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
-import { PostsEntityWithBlogRowAndLikesRaw } from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
+import {
+  PostsEntityWithBlogRowAndLikesRaw,
+  PostViewDto,
+} from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
+import { PostsQueryMapper } from '@modules/bloggers-platform/blogs/application/queries/post-query-mapper';
 
 @Injectable()
 class PostsQueryRepository {
@@ -13,12 +17,14 @@ class PostsQueryRepository {
     protected dataSource: DataSource,
   ) {}
 
+  // TODO switch into Typeorm
   async countPosts(): Promise<number> {
     const queryPosts = `SELECT COUNT(*) FROM "Posts"`;
     const result: [{ count: number }] = await this.dataSource.query(queryPosts);
     return result[0].count;
   }
 
+  // TODO switch into Typeorm
   async getAll(query: PostsQueryParamsDto, userId?: string) {
     const totalCount = Number(await this.countPosts());
     const limit = query.pageSize;
@@ -58,7 +64,8 @@ class PostsQueryRepository {
     };
   }
 
-  async findByIdWithRequestingUser(postId: string, userId?: string): Promise<PostsEntity | null> {
+  // TODO switch into Typeorm
+  async findByIdWithRequestingUser(postId: string, userId?: string): Promise<PostViewDto | null> {
     const userIdParam = userId ?? null;
     const item: PostsEntityWithBlogRowAndLikesRaw[] = await this.dataSource.query(
       `SELECT p."id", p."title", p."shortDescription", p."content", p."blogId", p."createdAt", b."name" as "blogName",
@@ -85,9 +92,13 @@ class PostsQueryRepository {
       [postId, userIdParam],
     );
 
-    return item[0] ?? null;
+    const row = item[0];
+    if (!row) return null;
+
+    return PostsQueryMapper.toViewDto(row);
   }
 
+  // TODO switch into Typeorm
   async countPostsByBlogId(blogId: string): Promise<number> {
     const queryPosts = `SELECT COUNT(*) FROM "Posts" WHERE "blogId" = $1`;
     const result: [{ count: number }] = await this.dataSource.query(queryPosts, [blogId]);
@@ -128,6 +139,7 @@ class PostsQueryRepository {
     };
   }
 
+  // TODO switch into Typeorm
   async findOrNotFoundFail(postId: string): Promise<PostsEntity[]> {
     const query = `SELECT * FROM "Posts" WHERE id = $1`;
     return await this.dataSource.query(query, [postId]);
