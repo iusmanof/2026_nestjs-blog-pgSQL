@@ -44,13 +44,6 @@ class PostsController {
     return this.commandBus.execute(new UpdatePostCommand(id, dto));
   }
 
-  // @UseGuards(BasicAuthGuard)
-  // @Delete(':postId')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async deletePost(@Param('postId') postId: string,): Promise<void> {
-  //   return this.commandBus.execute(new DeletePostCommand( postId));
-  // }
-
   @UseGuards(JwtAuthGuard)
   @Post(':postId/comments')
   @HttpCode(HttpStatus.CREATED)

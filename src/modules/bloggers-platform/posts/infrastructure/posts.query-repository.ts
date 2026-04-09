@@ -17,11 +17,8 @@ class PostsQueryRepository {
     protected dataSource: DataSource,
   ) {}
 
-  // TODO switch into Typeorm
   async countPosts(): Promise<number> {
-    const queryPosts = `SELECT COUNT(*) FROM "Posts"`;
-    const result: [{ count: number }] = await this.dataSource.query(queryPosts);
-    return result[0].count;
+    return this.dataSource.createQueryBuilder(PostsEntity, 'p').getCount();
   }
 
   // TODO switch into Typeorm
@@ -98,13 +95,14 @@ class PostsQueryRepository {
     return PostsQueryMapper.toViewDto(row);
   }
 
-  // TODO switch into Typeorm
   async countPostsByBlogId(blogId: string): Promise<number> {
-    const queryPosts = `SELECT COUNT(*) FROM "Posts" WHERE "blogId" = $1`;
-    const result: [{ count: number }] = await this.dataSource.query(queryPosts, [blogId]);
-    return result[0].count;
+    return this.dataSource
+      .createQueryBuilder(PostsEntity, 'p')
+      .where('p.blogId = :blogId', { blogId })
+      .getCount();
   }
 
+  // TODO TypeORM
   async getPostsForBlog(blogId: string, query: PostsQueryParamsDto, userId?: string) {
     const totalCount = Number(await this.countPostsByBlogId(blogId));
     const limit = query.pageSize;
@@ -139,10 +137,9 @@ class PostsQueryRepository {
     };
   }
 
-  // TODO switch into Typeorm
-  async findOrNotFoundFail(postId: string): Promise<PostsEntity[]> {
-    const query = `SELECT * FROM "Posts" WHERE id = $1`;
-    return await this.dataSource.query(query, [postId]);
+  // TODO можно ли так сделать в queryRepository
+  async findById(id: string): Promise<PostsEntity | null> {
+    return await this.dataSource.getRepository(PostsEntity).findOne({ where: { id: id } });
   }
 }
 
