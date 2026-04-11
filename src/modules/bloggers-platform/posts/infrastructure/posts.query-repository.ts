@@ -43,7 +43,8 @@ class PostsQueryRepository {
   }
 
   async getPostsForBlog(blogId: string, query: PostsQueryParamsDto, userId?: string) {
-    const posts = await this.getBasePostsForBlog(blogId, query);
+    const options = { blogId };
+    const posts = await this.getBasePosts(query, options);
 
     if (posts.length === 0) {
       return {
@@ -69,17 +70,26 @@ class PostsQueryRepository {
 
   // base queries
 
-  private async getBasePosts(query: PostsQueryParamsDto) {
+  private async getBasePosts(
+    query?: PostsQueryParamsDto,
+    options?: { blogId?: string; postId?: string },
+  ) {
     const sortMap: Record<string, string> = {
       createdAt: 'p.createdAt',
       title: 'p.title',
       blogName: 'b.name',
     };
 
-    const orderBy = sortMap[query.sortBy] || 'p.createdAt';
-    const direction = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+    const sortBy = query?.sortBy ?? PostsSortBy.CreatedAt;
 
-    return this.dataSource
+    const orderBy = sortMap[sortBy] ?? 'p.createdAt';
+
+    const direction = query?.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+
+    const limit = query?.pageSize ?? 10;
+    const offset = query?.calculateSkip?.() ?? 0;
+
+    const qb = this.dataSource
       .createQueryBuilder()
       .select([
         'p.id as id',
@@ -91,40 +101,19 @@ class PostsQueryRepository {
         'b.name as "blogName"',
       ])
       .from('Posts', 'p')
-      .innerJoin('Blogs', 'b', 'b.id = p.blogId')
-      .orderBy(orderBy, direction)
-      .limit(query.pageSize)
-      .offset(query.calculateSkip())
-      .getRawMany();
-  }
+      .innerJoin('Blogs', 'b', 'b.id = p.blogId');
 
-  private async getBasePostsForBlog(blogId: string, query: PostsQueryParamsDto) {
-    const sortMap: Record<string, string> = {
-      createdAt: 'p.createdAt',
-      title: 'p.title',
-    };
+    // фильтр по blogId
+    if (options?.blogId) {
+      qb.andWhere('p.blogId = :blogId', { blogId: options.blogId });
+    }
 
-    const orderBy = sortMap[query.sortBy] || 'p.createdAt';
-    const direction = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+    // фильтр по postId
+    if (options?.postId) {
+      qb.andWhere('p.id = :postId', { postId: options.postId });
+    }
 
-    return this.dataSource
-      .createQueryBuilder()
-      .select([
-        'p.id as id',
-        'p.title as title',
-        'p.shortDescription as "shortDescription"',
-        'p.content as content',
-        'p.blogId as "blogId"',
-        'p.createdAt as "createdAt"',
-        'b.name as "blogName"',
-      ])
-      .from('Posts', 'p')
-      .innerJoin('Blogs', 'b', 'b.id = p.blogId')
-      .where('p.blogId = :blogId', { blogId })
-      .orderBy(orderBy, direction)
-      .limit(query.pageSize)
-      .offset(query.calculateSkip())
-      .getRawMany();
+    return qb.orderBy(orderBy, direction).limit(limit).offset(offset).getRawMany();
   }
 
   private async getPostsCount(blogId?: string) {
@@ -214,69 +203,20 @@ class PostsQueryRepository {
     }));
   }
 
-  // TODO REFACTORING
-
   async findByIdWithRequestingUser(postId: string, userId?: string): Promise<PostViewDto | null> {
-    const post = await this.dataSource
-      .createQueryBuilder()
-      .select([
-        'p.id as id',
-        'p.title as title',
-        'p.shortDescription as "shortDescription"',
-        'p.content as content',
-        'p.blogId as "blogId"',
-        'p.createdAt as "createdAt"',
-        'b.name as "blogName"',
-      ])
-      .from('Posts', 'p')
-      .innerJoin('Blogs', 'b', 'b.id = p.blogId')
-      .where('p.id = :postId', { postId })
-      .getRawOne();
+    const posts = await this.getBasePosts({} as PostsQueryParamsDto, { postId });
 
-    if (!post) return null;
+    if (!posts.length) return null;
 
-    const reactions = await this.dataSource
-      .createQueryBuilder()
-      .select('pl.postId', 'postId')
-      .addSelect(`COUNT(*) FILTER (WHERE pl.status = 'Like')`, 'likesCount')
-      .addSelect(`COUNT(*) FILTER (WHERE pl.status = 'Dislike')`, 'dislikesCount')
-      .from('PostLikes', 'pl')
-      .where('pl.postId = :postId', { postId })
-      .groupBy('pl.postId')
-      .getRawOne();
+    const [reactions, myStatuses, newestLikes] = await Promise.all([
+      this.getReactions([postId]),
+      this.getMyStatuses([postId], userId),
+      this.getNewestLikes([postId]),
+    ]);
 
-    const myStatus = userId
-      ? await this.dataSource
-          .createQueryBuilder()
-          .select('pl.status', 'status')
-          .from('PostLikes', 'pl')
-          .where('pl.postId = :postId', { postId })
-          .andWhere('pl.userId = :userId', { userId })
-          .getRawOne()
-      : null;
+    const merged = this.mergePosts(posts, reactions, myStatuses, newestLikes)[0];
 
-    const newestLikesRaw = await this.dataSource
-      .createQueryBuilder()
-      .select(['pl.userId as "userId"', 'u.login as login', 'pl.addedAt as "addedAt"'])
-      .from('PostLikes', 'pl')
-      .innerJoin('Users', 'u', 'u.id = pl.userId')
-      .where('pl.postId = :postId', { postId })
-      .andWhere('pl.status = :like', { like: 'Like' })
-      .orderBy('pl.addedAt', 'DESC')
-      .limit(3)
-      .getRawMany();
-
-    return PostsQueryMapper.toViewDto({
-      ...post,
-      likesCount: Number(reactions?.likesCount ?? 0),
-      dislikesCount: Number(reactions?.dislikesCount ?? 0),
-      myStatus: myStatus?.status ?? 'None',
-      newestLikes: newestLikesRaw.map((l) => ({
-        userId: l.userId,
-        login: l.login,
-        addedAt: l.addedAt,
-      })),
-    });
+    return PostsQueryMapper.toViewDto(merged);
   }
 
   // TODO можно ли так сделать в queryRepository
