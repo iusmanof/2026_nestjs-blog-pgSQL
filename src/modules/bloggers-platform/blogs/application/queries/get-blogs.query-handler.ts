@@ -2,8 +2,9 @@ import { BlogsQueryParamsDto } from '../../api/dto/blogs-query-params.dto';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { BlogPaginatedViewDto } from '../../api/dto/blog-paginated.view.dto';
 import { BlogViewDto } from '../../api/dto/blog-view.dto';
-import BlogsQueryRepository from '../../infrastructure/blogs.query-repository';
 import { Inject } from '@nestjs/common';
+import BlogQueryRepository from '../../infrastructure/blogs.query-repository';
+import BlogsQueryRepository from '../../infrastructure/blogs.query-repository';
 
 export class GetBlogsQuery {
   constructor(public queryParams: BlogsQueryParamsDto) {}
@@ -15,7 +16,7 @@ export class GetBlogsQueryHandler implements IQueryHandler<
   BlogPaginatedViewDto<BlogViewDto>
 > {
   constructor(
-    @Inject(BlogsQueryRepository)
+    @Inject(BlogQueryRepository)
     private readonly blogsQueryRepository: BlogsQueryRepository,
   ) {}
   async execute(query: GetBlogsQuery): Promise<BlogPaginatedViewDto<BlogViewDto>> {

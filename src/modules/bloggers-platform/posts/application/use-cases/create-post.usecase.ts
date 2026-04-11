@@ -28,7 +28,6 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand, Pos
 
     const post = PostsEntity.create(dto);
     await this.postsRepository.save(post);
-    // return PostViewDto.mapToView(post as PostsEntityWithBlogRowAndLikesRaw);
 
     return {
       id: post.id,

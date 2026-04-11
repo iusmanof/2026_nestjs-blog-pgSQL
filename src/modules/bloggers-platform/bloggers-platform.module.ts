@@ -76,7 +76,6 @@ const handlers = [
   GetBlogByIdQueryHandler,
   GetBlogsQueryHandler,
   GetPostByIdQueryHandler,
-  GetPostByIdQueryHandler,
   GetPostQueryHandler,
   GetPostsForBlogQueryHandler,
   GetCommentsByPostIdQueryHandler,
@@ -87,11 +86,13 @@ const services = [];
 @Module({
   imports: [
     CqrsModule,
-    TypeOrmModule.forFeature([BlogsEntity]),
-    TypeOrmModule.forFeature([PostsEntity]),
-    TypeOrmModule.forFeature([PostLikesEntity]),
-    TypeOrmModule.forFeature([CommentsEntity]),
-    TypeOrmModule.forFeature([CommentLikesEntity]),
+    TypeOrmModule.forFeature([
+      BlogsEntity,
+      PostsEntity,
+      PostLikesEntity,
+      CommentsEntity,
+      CommentLikesEntity,
+    ]),
   ],
   controllers: [...controllers],
   providers: [...repositories, ...useCases, ...handlers, ...services],

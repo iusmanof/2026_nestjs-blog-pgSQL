@@ -10,7 +10,7 @@ import { SortDirection } from '@core/dto/base.query-params.dto';
 import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
 
 @Injectable()
-class BlogQueryRepository {
+class BlogsQueryRepository {
   constructor(
     @InjectDataSource()
     protected dataSource: DataSource,
@@ -73,4 +73,4 @@ class BlogQueryRepository {
   }
 }
 
-export default BlogQueryRepository;
+export default BlogsQueryRepository;
