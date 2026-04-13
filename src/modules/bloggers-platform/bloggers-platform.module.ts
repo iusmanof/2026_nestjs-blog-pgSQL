@@ -39,7 +39,7 @@ import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrast
 import { UpdateCommentLikeStatusUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment-like-status.usecase';
 import UsersRepository from '@user-accounts/infrastructure/users.repository';
 import BlogsSuperAdminPublicController from '@modules/bloggers-platform/blogs/api/controllers/blogs-sa-public.controller';
-import { TestEntity } from '@modules/bloggers-platform/test/test.domain';
+import { TestEntity } from '@modules/bloggers-platform/test/test.entity';
 
 const controllers = [
   BlogsController,
