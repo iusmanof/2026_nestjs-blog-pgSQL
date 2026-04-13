@@ -22,17 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(payload: UserContextDto): Promise<UserContextDto> {
     const device = await this.sessionRepository.findByDeviceId(payload.id);
-    console.log('validate');
-    console.log(device);
-
-    // if (!user) {
-    //   throw new DomainException({
-    //     code: DomainExceptionCode.Unauthorized,
-    //     message: 'User not found',
-    //     extensions: [{ field: 'id', message: 'User not found' }],
-    //   });
-    // }
-
     return {
       id: device!.userId.toString(),
     };

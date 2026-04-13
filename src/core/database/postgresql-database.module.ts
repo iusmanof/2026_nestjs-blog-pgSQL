@@ -18,7 +18,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         password: configService.get<string>('DB_PASSWORD', 'pass'),
         database: configService.get<string>('DB_NAME', 'pg-db'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
         logging: true,
       }),
     }),

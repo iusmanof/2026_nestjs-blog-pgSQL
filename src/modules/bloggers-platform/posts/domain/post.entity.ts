@@ -97,4 +97,12 @@ export class PostsEntity {
   getId() {
     return this.id;
   }
+
+  getBlogId() {
+    return this.blogId;
+  }
+
+  getCreatedAt() {
+    return this.createdAt;
+  }
 }

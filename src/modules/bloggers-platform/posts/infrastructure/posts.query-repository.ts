@@ -9,6 +9,40 @@ import {
 import { SortDirection } from '@core/dto/base.query-params.dto';
 import { PostViewDto } from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
 import { PostsQueryMapper } from '@modules/bloggers-platform/blogs/application/queries/post-query-mapper';
+import { NewestLikeViewDto } from '@modules/bloggers-platform/posts/api/dto/newest-like-view.dto';
+import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
+
+// TODO REFACTOR
+type ReactionRow = {
+  postId: string;
+  likesCount: string;
+  dislikesCount: string;
+};
+
+// TODO REFACTOR
+type MyStatusRow = {
+  postId: string;
+  status: LikeStatus;
+};
+
+// TODO REFACTOR RAW
+type PostsRaw = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  blogId: string;
+  createdAt: Date;
+  blogName: string;
+};
+
+// TODO REFACTOR RAW
+type PostsWithLikes = PostsRaw & {
+  likesCount: number;
+  dislikesCount: number;
+  myStatus: LikeStatus;
+  newestLikes: NewestLikeViewDto[];
+};
 
 @Injectable()
 class PostsQueryRepository {
@@ -27,7 +61,7 @@ class PostsQueryRepository {
       };
     }
 
-    const postIds = posts.map((p) => p.id);
+    const postIds: string[] = posts.map((p) => p.id);
 
     const [totalCount, reactions, myStatuses, newestLikes] = await Promise.all([
       this.getPostsCount(),
@@ -73,7 +107,7 @@ class PostsQueryRepository {
   private async getBasePosts(
     query?: PostsQueryParamsDto,
     options?: { blogId?: string; postId?: string },
-  ) {
+  ): Promise<PostsRaw[]> {
     const sortMap: Record<string, string> = {
       createdAt: 'p.createdAt',
       title: 'p.title',
@@ -103,30 +137,28 @@ class PostsQueryRepository {
       .from('Posts', 'p')
       .innerJoin('Blogs', 'b', 'b.id = p.blogId');
 
-    // фильтр по blogId
     if (options?.blogId) {
       qb.andWhere('p.blogId = :blogId', { blogId: options.blogId });
     }
 
-    // фильтр по postId
     if (options?.postId) {
       qb.andWhere('p.id = :postId', { postId: options.postId });
     }
 
-    return qb.orderBy(orderBy, direction).limit(limit).offset(offset).getRawMany();
+    return await qb.orderBy(orderBy, direction).limit(limit).offset(offset).getRawMany();
   }
 
-  private async getPostsCount(blogId?: string) {
+  private async getPostsCount(blogId?: string): Promise<number> {
     const qb = this.dataSource.createQueryBuilder().from('Posts', 'p');
 
     if (blogId) {
       qb.where('p.blogId = :blogId', { blogId });
     }
 
-    return qb.getCount();
+    return await qb.getCount();
   }
 
-  private async getReactions(postIds: string[]) {
+  private async getReactions(postIds: string[]): Promise<ReactionRow[]> {
     return this.dataSource
       .createQueryBuilder()
       .select('pl.postId', 'postId')
@@ -138,7 +170,7 @@ class PostsQueryRepository {
       .getRawMany();
   }
 
-  private async getMyStatuses(postIds: string[], userId?: string) {
+  private async getMyStatuses(postIds: string[], userId?: string): Promise<MyStatusRow[]> {
     if (!userId) return [];
 
     return this.dataSource
@@ -150,7 +182,7 @@ class PostsQueryRepository {
       .getRawMany();
   }
 
-  private async getNewestLikes(postIds: string[]) {
+  private async getNewestLikes(postIds: string[]): Promise<NewestLikeViewDto[]> {
     return this.dataSource.query(
       `
       SELECT *
@@ -175,7 +207,12 @@ class PostsQueryRepository {
     );
   }
 
-  private mergePosts(posts: any[], reactions: any[], myStatuses: any[], newestLikes: any[]) {
+  private mergePosts(
+    posts: PostsRaw[],
+    reactions: ReactionRow[],
+    myStatuses: MyStatusRow[],
+    newestLikes: NewestLikeViewDto[],
+  ): PostsWithLikes[] {
     const reactionsMap = new Map(reactions.map((r) => [r.postId, r]));
 
     const myStatusMap = new Map(myStatuses.map((m) => [m.postId, m.status]));

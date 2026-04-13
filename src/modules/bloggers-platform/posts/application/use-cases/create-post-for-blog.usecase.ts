@@ -7,6 +7,7 @@ import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import BlogsRepository from '@modules/bloggers-platform/blogs/infrastructure/blogs.repository';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
+import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 
 export class CreatePostForBlogCommand {
   constructor(
@@ -42,11 +43,11 @@ export class CreatePostForBlogUseCase implements ICommandHandler<
     const postDTO = {
       ...post,
       blogName: blog.getName(),
-      likesCount: '0',
-      dislikesCount: '0',
-      myStatus: 'None',
+      likesCount: 0,
+      dislikesCount: 0,
+      myStatus: 'None' as LikeStatus,
       newestLikes: [],
     };
-    return PostViewDto.mapToView(postDTO as PostsEntityWithBlogRowAndLikesRaw);
+    return PostViewDto.mapToView(postDTO);
   }
 }
