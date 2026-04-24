@@ -1,10 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
-import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 import { UpdateCommentDto } from '@modules/bloggers-platform/comments/api/dto/update-comment.dto';
 import CommentsRepository from '@modules/bloggers-platform/comments/infrastructire/comment.repository';
-import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 
 export class UpdateCommentCommand {
   constructor(
@@ -16,13 +14,10 @@ export class UpdateCommentCommand {
 
 @CommandHandler(UpdateCommentCommand)
 export class UpdateCommentUseCase implements ICommandHandler<UpdateCommentCommand> {
-  constructor(
-    private readonly commentsRepository: CommentsRepository,
-    private readonly commentsQueryRepository: CommentsQueryRepository,
-  ) {}
+  constructor(private readonly commentsRepository: CommentsRepository) {}
   async execute(command: UpdateCommentCommand): Promise<void> {
     const { commentId, dto, userId }: UpdateCommentCommand = command;
-    const comment: CommentsEntity = await this.commentsQueryRepository.findById(commentId);
+    const comment = await this.commentsRepository.findById(commentId);
 
     if (!comment) {
       throw new DomainException({
@@ -39,7 +34,7 @@ export class UpdateCommentUseCase implements ICommandHandler<UpdateCommentComman
         extensions: [new Extension('Access denied', 'userId')],
       });
     }
-
-    await this.commentsRepository.update(commentId, dto);
+    comment.changeDetails(dto);
+    await this.commentsRepository.save(comment);
   }
 }

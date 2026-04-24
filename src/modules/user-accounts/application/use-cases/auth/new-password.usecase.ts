@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { NewPasswordDto } from '../../../api/dto/new-password.dto';
-import { CryptoService } from '../../crypto.service';
+import { CryptoService } from '../../services/crypto.service';
 import UsersRepository from '../../../infrastructure/users.repository';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';

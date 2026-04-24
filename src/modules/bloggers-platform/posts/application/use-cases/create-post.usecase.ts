@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import PostsRepository from '../../infrastructure/posts.repository';
-import { CreatePostDto } from '../../api/dto/create-post.dto';
+import { CreateUpdatePostDto } from '../../api/dto/create-update-post.dto';
 import { PostViewDto } from '../../api/dto/post-view.dto';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
@@ -8,7 +8,7 @@ import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-c
 import BlogsRepository from '@modules/bloggers-platform/blogs/infrastructure/blogs.repository';
 
 export class CreatePostCommand {
-  constructor(public dto: CreatePostDto) {}
+  constructor(public dto: CreateUpdatePostDto) {}
 }
 
 @CommandHandler(CreatePostCommand)

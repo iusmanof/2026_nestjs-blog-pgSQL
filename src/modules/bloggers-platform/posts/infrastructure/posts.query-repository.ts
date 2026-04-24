@@ -8,41 +8,9 @@ import {
 } from '@modules/bloggers-platform/posts/api/dto/posts-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
 import { PostViewDto } from '@modules/bloggers-platform/posts/api/dto/post-view.dto';
-import { PostsQueryMapper } from '@modules/bloggers-platform/blogs/application/queries/post-query-mapper';
 import { NewestLikeViewDto } from '@modules/bloggers-platform/posts/api/dto/newest-like-view.dto';
-import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
-
-// TODO REFACTOR
-type ReactionRow = {
-  postId: string;
-  likesCount: string;
-  dislikesCount: string;
-};
-
-// TODO REFACTOR
-type MyStatusRow = {
-  postId: string;
-  status: LikeStatus;
-};
-
-// TODO REFACTOR RAW
-type PostsRaw = {
-  id: string;
-  title: string;
-  shortDescription: string;
-  content: string;
-  blogId: string;
-  createdAt: Date;
-  blogName: string;
-};
-
-// TODO REFACTOR RAW
-type PostsWithLikes = PostsRaw & {
-  likesCount: number;
-  dislikesCount: number;
-  myStatus: LikeStatus;
-  newestLikes: NewestLikeViewDto[];
-};
+import { ReactionRowDto } from '@modules/bloggers-platform/posts/api/dto/reaction-row.dto';
+import { StatusRowDto } from '@modules/bloggers-platform/posts/api/dto/status-row.dto';
 
 @Injectable()
 class PostsQueryRepository {
@@ -50,6 +18,11 @@ class PostsQueryRepository {
     @InjectDataSource()
     protected dataSource: DataSource,
   ) {}
+
+  // TODO можно ли так сделать в queryRepository
+  async findById(id: string): Promise<PostsEntity | null> {
+    return await this.dataSource.getRepository(PostsEntity).findOne({ where: { id: id } });
+  }
 
   async getAll(query: PostsQueryParamsDto, userId?: string) {
     const posts = await this.getBasePosts(query);
@@ -102,12 +75,10 @@ class PostsQueryRepository {
     };
   }
 
-  // base queries
-
   private async getBasePosts(
     query?: PostsQueryParamsDto,
     options?: { blogId?: string; postId?: string },
-  ): Promise<PostsRaw[]> {
+  ): Promise<PostViewDto[]> {
     const sortMap: Record<string, string> = {
       createdAt: 'p.createdAt',
       title: 'p.title',
@@ -149,28 +120,30 @@ class PostsQueryRepository {
   }
 
   private async getPostsCount(blogId?: string): Promise<number> {
-    const qb = this.dataSource.createQueryBuilder().from('Posts', 'p');
+    const qb = this.dataSource.getRepository(PostsEntity).createQueryBuilder('p');
 
     if (blogId) {
       qb.where('p.blogId = :blogId', { blogId });
     }
 
-    return await qb.getCount();
+    return qb.getCount();
   }
 
-  private async getReactions(postIds: string[]): Promise<ReactionRow[]> {
+  private async getReactions(postIds: string[]): Promise<ReactionRowDto[]> {
+    if (!postIds.length) return [];
+
     return this.dataSource
       .createQueryBuilder()
       .select('pl.postId', 'postId')
-      .addSelect(`COUNT(*) FILTER (WHERE pl.status = 'Like')`, 'likesCount')
-      .addSelect(`COUNT(*) FILTER (WHERE pl.status = 'Dislike')`, 'dislikesCount')
+      .addSelect(`SUM(CASE WHEN pl.status = 'Like' THEN 1 ELSE 0 END)`, 'likesCount')
+      .addSelect(`SUM(CASE WHEN pl.status = 'Dislike' THEN 1 ELSE 0 END)`, 'dislikesCount')
       .from('PostLikes', 'pl')
       .where('pl.postId IN (:...postIds)', { postIds })
       .groupBy('pl.postId')
       .getRawMany();
   }
 
-  private async getMyStatuses(postIds: string[], userId?: string): Promise<MyStatusRow[]> {
+  private async getMyStatuses(postIds: string[], userId?: string): Promise<StatusRowDto[]> {
     if (!userId) return [];
 
     return this.dataSource
@@ -183,36 +156,34 @@ class PostsQueryRepository {
   }
 
   private async getNewestLikes(postIds: string[]): Promise<NewestLikeViewDto[]> {
+    if (!postIds.length) return [];
+
     return this.dataSource.query(
       `
-      SELECT *
-      FROM (
-        SELECT 
-          pl."postId",
-          pl."userId",
-          u.login,
-          pl."addedAt",
-          ROW_NUMBER() OVER (
-            PARTITION BY pl."postId"
-            ORDER BY pl."addedAt" DESC
-          ) as rn
-        FROM "PostLikes" pl
-        JOIN "Users" u ON u.id = pl."userId"
-        WHERE pl."postId" = ANY($1)
-          AND pl.status = 'Like'
-      ) t
-      WHERE t.rn <= 3
+          SELECT pl."postId", pl."userId", u.login, pl."addedAt"
+          FROM "PostLikes" pl
+                   JOIN "Users" u ON u.id = pl."userId"
+          WHERE pl."postId" = ANY($1)
+            AND pl."status" = 'Like'
+            AND (
+                    SELECT COUNT(*)
+                    FROM "PostLikes" pl2
+                    WHERE pl2."postId" = pl."postId"
+                      AND pl2."status" = 'Like'
+                      AND pl2."addedAt" > pl."addedAt"
+                ) < 3
+          ORDER BY pl."postId", pl."addedAt" DESC
       `,
       [postIds],
     );
   }
 
   private mergePosts(
-    posts: PostsRaw[],
-    reactions: ReactionRow[],
-    myStatuses: MyStatusRow[],
+    posts: PostViewDto[],
+    reactions: ReactionRowDto[],
+    myStatuses: StatusRowDto[],
     newestLikes: NewestLikeViewDto[],
-  ): PostsWithLikes[] {
+  ): PostViewDto[] {
     const reactionsMap = new Map(reactions.map((r) => [r.postId, r]));
 
     const myStatusMap = new Map(myStatuses.map((m) => [m.postId, m.status]));
@@ -220,23 +191,27 @@ class PostsQueryRepository {
     const newestLikesMap = new Map<string, any[]>();
 
     for (const like of newestLikes) {
-      if (!newestLikesMap.has(like.postId)) {
-        newestLikesMap.set(like.postId, []);
-      }
+      const arr = newestLikesMap.get(like.postId) ?? [];
 
-      newestLikesMap.get(like.postId)!.push({
-        userId: like.userId,
-        login: like.login,
-        addedAt: like.addedAt,
-      });
+      if (arr.length < 3) {
+        arr.push({
+          userId: like.userId,
+          login: like.login,
+          addedAt: like.addedAt,
+        });
+
+        newestLikesMap.set(like.postId, arr);
+      }
     }
 
     return posts.map((post) => ({
       ...post,
-      likesCount: Number(reactionsMap.get(post.id)?.likesCount ?? 0),
-      dislikesCount: Number(reactionsMap.get(post.id)?.dislikesCount ?? 0),
-      myStatus: myStatusMap.get(post.id) ?? 'None',
-      newestLikes: newestLikesMap.get(post.id) ?? [],
+      extendedLikesInfo: {
+        likesCount: Number(reactionsMap.get(post.id)?.likesCount ?? 0),
+        dislikesCount: Number(reactionsMap.get(post.id)?.dislikesCount ?? 0),
+        myStatus: myStatusMap.get(post.id) ?? 'None',
+        newestLikes: newestLikesMap.get(post.id) ?? [],
+      },
     }));
   }
 
@@ -253,12 +228,7 @@ class PostsQueryRepository {
 
     const merged = this.mergePosts(posts, reactions, myStatuses, newestLikes)[0];
 
-    return PostsQueryMapper.toViewDto(merged);
-  }
-
-  // TODO можно ли так сделать в queryRepository
-  async findById(id: string): Promise<PostsEntity | null> {
-    return await this.dataSource.getRepository(PostsEntity).findOne({ where: { id: id } });
+    return PostViewDto.mapToView(merged);
   }
 }
 

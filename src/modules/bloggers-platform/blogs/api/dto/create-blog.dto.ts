@@ -18,7 +18,7 @@ export class CreateBlogDto {
   @IsString()
   @IsNotEmpty()
   @Length(1, 100)
-  @Matches(/^https:\/\/.+/, {
+  @Matches(/^https:\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/, {
     message: 'websiteUrl must be a valid URL',
   })
   websiteUrl: string;

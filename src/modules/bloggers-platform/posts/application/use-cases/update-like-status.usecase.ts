@@ -4,6 +4,8 @@ import PostsRepository from '../../infrastructure/posts.repository';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import UsersRepository from '@user-accounts/infrastructure/users.repository';
+import PostsLikesRepository from '@modules/bloggers-platform/posts/infrastructure/post-like.repository';
+import { PostLikesEntity } from '@modules/bloggers-platform/posts/domain/post-likes.entity';
 
 export class UpdateLikeStatusCommand {
   constructor(
@@ -19,6 +21,7 @@ export class UpdateLikeStatusUseCase implements ICommandHandler<UpdateLikeStatus
   constructor(
     private readonly postsRepository: PostsRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly postsLikesRepository: PostsLikesRepository,
   ) {}
   async execute(command: UpdateLikeStatusCommand): Promise<any> {
     const { userId, postId, dto } = command;
@@ -39,24 +42,14 @@ export class UpdateLikeStatusUseCase implements ICommandHandler<UpdateLikeStatus
       });
     }
 
-    // const checkedPostId = await this.postsQueryRepository.findOrNotFoundFail(postId);
-    //
-    // if (!checkedPostId.length) {
-    //   throw new DomainException({
-    //     code: DomainExceptionCode.NotFound,
-    //     message: 'Post not found',
-    //     extensions: [new Extension('Post with given id does not exist', 'id')],
-    //   });
-    // }
+    let like = await this.postsLikesRepository.find(userId, postId);
 
-    // if (!userId) {
-    //   throw new DomainException({
-    //     code: DomainExceptionCode.Unauthorized,
-    //     message: 'User not found',
-    //   });
-    // }
+    if (!like) {
+      like = PostLikesEntity.create(userId, postId, dto.likeStatus);
+    } else {
+      like.changeStatus(dto.likeStatus);
+    }
 
-    // TODO DDD + Typorm
-    return await this.postsRepository.setLikeStatus(userId, postId, dto.likeStatus);
+    await this.postsLikesRepository.save(like);
   }
 }

@@ -36,7 +36,6 @@ class SessionRepository {
       .delete()
       .from(SessionEntity)
       .where('deviceId = :deviceId', { deviceId })
-      // .andWhere('userId = :userId', { userId })
       .execute();
   }
 

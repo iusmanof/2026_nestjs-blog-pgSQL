@@ -25,7 +25,6 @@ class EmailConfirmationRepository {
   }
 
   async save(entity: UserEmailConfirmationEntity): Promise<void> {
-    // insert and update
     await this.dataSource.getRepository(UserEmailConfirmationEntity).save(entity);
   }
 

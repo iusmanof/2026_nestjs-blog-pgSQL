@@ -3,6 +3,7 @@ import { DomainException, Extension } from '@core/exceptions/filters/domain-exce
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import { CommentViewDto } from '../../api/dto/comment-view.dto';
 import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
+import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 
 export class GetCommentByIdQuery {
   constructor(
@@ -30,7 +31,10 @@ export class GetCommentByIdQueryHandler implements IQueryHandler<
       });
     }
 
-    const myStatus = await this.commentsQueryRepository.findStatusByUserId(commentId, userId);
+    const myStatus: LikeStatus = userId
+      ? await this.commentsQueryRepository.findStatusByUserId(commentId, userId)
+      : 'None';
+
     return CommentViewDto.mapToViewWithCurrentStatus(comment, myStatus);
   }
 }

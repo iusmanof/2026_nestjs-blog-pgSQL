@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CommentsQueryParamsDto } from '../api/dto/comments-query-params.dto';
+import { CommentsQueryParamsDto, CommentsSortBy } from '../api/dto/comments-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -14,82 +14,60 @@ class CommentsQueryRepository {
     protected dataSource: DataSource,
   ) {}
 
-  async findById(commentId: string): Promise<CommentsEntity> {
-    const query = `SELECT * FROM "Comments" WHERE "id" = $1`;
-    const values = [commentId];
-    const result: CommentsEntity[] = await this.dataSource.query(query, values);
-    return result[0] ?? null;
+  async findById(commentId: string): Promise<CommentsEntity | null> {
+    return await this.dataSource
+      .getRepository(CommentsEntity)
+      .findOne({ where: { id: commentId } });
   }
 
   async getCommentByPostId(postId: string, userId: string, query: CommentsQueryParamsDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
+    const sortBy = query.sortBy || CommentsSortBy.CreatedAt;
+    const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+    const limit = query.pageSize;
+    const offset = query.calculateSkip();
 
-    try {
-      const sortBy = query.sortBy || 'createdAt';
-      const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
-      const limit = query.pageSize;
-      const offset = query.calculateSkip();
+    const qb = this.dataSource
+      .getRepository(CommentsEntity)
+      .createQueryBuilder('c')
+      .where('c.postId = :postId', { postId });
 
-      const countResult = (await queryRunner.query(
-        `SELECT COUNT(*) FROM "Comments" WHERE "postId" = $1`,
-        [postId],
-      )) as { count: string }[];
-      const totalCount = Number(countResult[0].count);
+    const totalCount = await qb.getCount();
 
-      const items = (await queryRunner.query(
-        `SELECT * FROM "Comments"
-       WHERE "postId" = $1
-       ORDER BY "${sortBy}" ${sortDirection}
-       LIMIT $2 OFFSET $3`,
-        [postId, limit, offset],
-      )) as CommentsEntity[];
+    const items = await qb
+      .orderBy(`c.${sortBy}`, sortDirection)
+      .limit(limit)
+      .offset(offset)
+      .getMany();
 
-      const commentIds = items.map((c) => c.id);
+    const commentIds = items.map((c) => c.id);
 
-      const likeStatuses =
-        userId && commentIds.length
-          ? ((await queryRunner.query(
-              `SELECT "commentId", "status"
-             FROM "CommentLikes"
-             WHERE "userId" = $1
-             AND "commentId" = ANY($2)`,
-              [userId, commentIds],
-            )) as {
-              commentId: string;
-              status: LikeStatus;
-            }[])
-          : [];
+    let statusMap = new Map<string, LikeStatus>();
 
-      const statusMap = new Map<string, LikeStatus>();
+    if (userId && commentIds.length) {
+      const likes = await this.dataSource
+        .getRepository(CommentLikesEntity)
+        .createQueryBuilder('cl')
+        .select(['cl.commentId', 'cl.status'])
+        .where('cl.userId = :userId', { userId })
+        .andWhere('cl.commentId IN (:...commentIds)', { commentIds })
+        .getRawMany<{ cl_commentId: string; cl_status: LikeStatus }>();
 
-      likeStatuses.forEach((l) => {
-        statusMap.set(l.commentId, l.status);
-      });
-
-      return { items, totalCount, statusMap };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async findOrNotFail(commentId: string): Promise<CommentsEntity[]> {
-    const query = `SELECT * FROM "Comments" WHERE "id" = $1`;
-    return await this.dataSource.query(query, [commentId]);
-  }
-
-  async findStatusByUserId(commentId: string, userId?: string): Promise<LikeStatus> {
-    if (!userId) {
-      return 'None';
+      statusMap = new Map(likes.map((l) => [l.cl_commentId, l.cl_status]));
     }
 
-    const query = `SELECT status FROM "CommentLikes" WHERE "commentId" = $1 AND "userId" = $2 LIMIT 1`;
+    return { items, totalCount, statusMap };
+  }
 
-    const result: CommentLikesEntity[] = await this.dataSource.query(query, [commentId, userId]);
-    return result[0]?.status ?? 'None';
+  async findStatusByUserId(commentId: string, userId: string): Promise<LikeStatus> {
+    const result: { status?: LikeStatus } | undefined = await this.dataSource
+      .getRepository(CommentLikesEntity)
+      .createQueryBuilder('cl')
+      .select('cl.status', 'status')
+      .where('cl.commentId = :commentId', { commentId })
+      .andWhere('cl.userId = :userId', { userId })
+      .getRawOne();
+
+    return result?.status ?? 'None';
   }
 }
 

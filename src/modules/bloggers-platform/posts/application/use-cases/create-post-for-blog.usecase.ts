@@ -2,7 +2,7 @@ import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
 import { CreatePostForBlogDto } from '../../api/dto/create-post-for-blog.dto';
 import PostsRepository from '../../infrastructure/posts.repository';
 
-import { PostsEntityWithBlogRowAndLikesRaw, PostViewDto } from '../../api/dto/post-view.dto';
+import { PostViewDto } from '../../api/dto/post-view.dto';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import BlogsRepository from '@modules/bloggers-platform/blogs/infrastructure/blogs.repository';

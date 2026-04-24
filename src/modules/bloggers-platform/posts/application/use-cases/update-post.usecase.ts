@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdatePostDto } from '../../api/dto/update-post.dto';
 import PostsRepository from '../../infrastructure/posts.repository';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
+import { UpdatePostDto } from '@modules/bloggers-platform/posts/api/dto/create-update-post.dto';
 
 export class UpdatePostCommand {
   constructor(
@@ -32,12 +32,5 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
 
     post.changeDetails(command.dto);
     await this.postsRepository.save(post);
-    //   const entity = await this.postsRepository.update(command.postId, dto, command.blogId);
-    //   if (!entity) {
-    //     throw new DomainException({
-    //       code: DomainExceptionCode.NotFound,
-    //       message: 'Post not found',
-    //     });
-    //   }
   }
 }
