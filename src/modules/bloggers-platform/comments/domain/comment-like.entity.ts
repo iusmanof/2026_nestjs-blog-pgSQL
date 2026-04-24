@@ -12,7 +12,6 @@ export class CommentLikesEntity {
   @Column({ type: 'varchar' })
   status: LikeStatus;
 
-  // Comment
   @ManyToOne(() => CommentsEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'commentId' })
   comment: CommentsEntity;

@@ -9,7 +9,6 @@ import {
   Post,
   Query,
   UseGuards,
-  // UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateUserDto } from '../dto/create-user.dto';

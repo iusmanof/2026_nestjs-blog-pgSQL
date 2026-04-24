@@ -51,7 +51,6 @@ class BlogsQueryRepository {
       qb.orderBy(`blog.${sortBy}`, direction);
     }
 
-    // пагинация
     const skip = (pageNumber - 1) * pageSize;
     qb.skip(skip).take(pageSize);
 
