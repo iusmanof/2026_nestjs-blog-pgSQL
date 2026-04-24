@@ -11,7 +11,6 @@ import { GlobalThrottlerModule } from '@core/throttler/throttler.module';
   imports: [
     configModule,
     PostgresqlDatabaseModule,
-    // CoreModule,
     UserAccountsModule,
     BloggersPlatformModule,
     DeleteAllDataModule,

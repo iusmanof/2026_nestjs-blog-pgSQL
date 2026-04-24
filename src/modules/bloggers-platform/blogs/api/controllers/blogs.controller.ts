@@ -19,7 +19,6 @@ import { UpdateBlogCommand } from '@modules/bloggers-platform/blogs/application/
 import { DeleteBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/delete-blog-use.case';
 import { CreatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/create-post-for-blog.dto';
 import { CreatePostForBlogCommand } from '@modules/bloggers-platform/posts/application/use-cases/create-post-for-blog.usecase';
-import { UpdatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/update-post-for-blog.dto';
 import { UpdatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
 import { DeletePostCommand } from '@modules/bloggers-platform/blogs/application/use-cases/delete-post.usecase-specified-by-id';
 
@@ -59,7 +58,7 @@ class BlogsController {
   updatePostForBlog(
     @Param('blogId') blogId: string,
     @Param('postId') postId: string,
-    @Body() dto: UpdatePostForBlogDto,
+    @Body() dto: CreatePostForBlogDto,
   ) {
     return this.commandBus.execute(new UpdatePostCommand(postId, dto, blogId));
   }

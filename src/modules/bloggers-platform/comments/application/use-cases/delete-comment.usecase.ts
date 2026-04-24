@@ -2,7 +2,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 import CommentsRepository from '../../infrastructire/comment.repository';
-import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 
 export class DeleteCommentCommand {
   constructor(
@@ -13,10 +12,7 @@ export class DeleteCommentCommand {
 
 @CommandHandler(DeleteCommentCommand)
 export class DeleteCommentUseCase implements ICommandHandler<DeleteCommentCommand> {
-  constructor(
-    private readonly commentsRepository: CommentsRepository,
-    private readonly commentsQueryRepository: CommentsQueryRepository,
-  ) {}
+  constructor(private readonly commentsRepository: CommentsRepository) {}
 
   async execute(command: DeleteCommentCommand): Promise<void> {
     if (!command.userId) {
@@ -27,7 +23,7 @@ export class DeleteCommentUseCase implements ICommandHandler<DeleteCommentComman
       });
     }
 
-    const comment = await this.commentsQueryRepository.findById(command.commentId);
+    const comment = await this.commentsRepository.findById(command.commentId);
     if (!comment) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -42,6 +38,8 @@ export class DeleteCommentUseCase implements ICommandHandler<DeleteCommentComman
         extensions: [new Extension('Access denied', 'userId')],
       });
     }
-    await this.commentsRepository.delete(command.commentId);
+
+    comment.delete();
+    await this.commentsRepository.remove(comment.getId());
   }
 }

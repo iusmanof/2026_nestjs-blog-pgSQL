@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
-import { UpdateCommentDto } from '@modules/bloggers-platform/comments/api/dto/update-comment.dto';
 import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
+import { CommentLikesEntity } from '@modules/bloggers-platform/comments/domain/comment-like.entity';
 
 @Injectable()
 class CommentsRepository {
@@ -12,89 +12,50 @@ class CommentsRepository {
     protected dataSource: DataSource,
   ) {}
 
+  async findById(commentId: string): Promise<CommentsEntity | null> {
+    return await this.dataSource
+      .getRepository(CommentsEntity)
+      .findOne({ where: { id: commentId } });
+  }
+
   async save(comment: CommentsEntity) {
     await this.dataSource.getRepository(CommentsEntity).save(comment);
   }
-  async create(
-    postId: string,
-    userId: string,
-    login: string,
-    content: string,
-  ): Promise<CommentsEntity> {
-    const query = `INSERT INTO "Comments" ("content", "postId", "userId", "userLogin", "likesCount", "dislikesCount")
-      VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *`;
 
-    const values = [content, postId, userId, login, 0, 0];
-
-    const result: CommentsEntity[] = await this.dataSource.query(query, values);
-    return result[0];
+  async remove(commentId: string): Promise<void> {
+    await this.dataSource.getRepository(CommentsEntity).delete({ id: commentId });
   }
+  async updateLikeStatus(commentId: string, userId: string, status: LikeStatus): Promise<void> {
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      await transactionalEntityManager.upsert(CommentLikesEntity, { commentId, userId, status }, [
+        'commentId',
+        'userId',
+      ]);
 
-  async delete(commentId: string): Promise<void> {
-    const query = `DELETE FROM "Comments" WHERE "id" = $1`;
-    const values = [commentId];
-    await this.dataSource.query(query, values);
-  }
-
-  async update(commentId: string, dto: UpdateCommentDto): Promise<void> {
-    const query = `UPDATE "Comments" SET "content" = $2 WHERE "id" = $1 RETURNING *`;
-    const values = [commentId, dto.content];
-    return await this.dataSource.query(query, values);
-  }
-
-  async updateLikeStatus(commentId: string, userId: string, status: LikeStatus): Promise<boolean> {
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      await queryRunner.query(
-        `INSERT INTO "CommentLikes" ("commentId", "userId", "status") 
-     VALUES ($1, $2, $3)
-     ON CONFLICT ("commentId", "userId") 
-     DO UPDATE SET "status" = EXCLUDED."status"`,
-        [commentId, userId, status],
-      );
-
-      await queryRunner.query(
+      await transactionalEntityManager.query(
         `UPDATE "Comments" c
-     SET
-       "likesCount" = sub.likes,
-       "dislikesCount" = sub.dislikes
-     FROM (
-       SELECT
-         cl."commentId",
-         COUNT(*) FILTER (WHERE cl."status" = 'Like') AS likes,
-         COUNT(*) FILTER (WHERE cl."status" = 'Dislike') AS dislikes
-       FROM "CommentLikes" cl
-       WHERE cl."commentId" = $1
-       GROUP BY cl."commentId"
-     ) sub
-     WHERE c.id = sub."commentId"`,
+        SET
+          "likesCount" = sub.likes,
+          "dislikesCount" = sub.dislikes
+        FROM (
+          SELECT
+            cl."commentId",
+            COUNT(*) FILTER (WHERE cl."status" = 'Like') AS likes,
+            COUNT(*) FILTER (WHERE cl."status" = 'Dislike') AS dislikes
+          FROM "CommentLikes" cl
+          WHERE cl."commentId" = $1
+          GROUP BY cl."commentId"
+        ) sub
+        WHERE c.id = sub."commentId"`,
         [commentId],
       );
-
-      await queryRunner.commitTransaction();
-    } catch (e) {
-      await queryRunner.rollbackTransaction();
-      // throw e;
-      return false;
-    } finally {
-      await queryRunner.release();
-    }
-    return true;
+    });
   }
-
   async deleteAll() {
-    const query = `DELETE FROM "Comments"`;
-    await this.dataSource.query(query);
+    await this.dataSource.createQueryBuilder().delete().from('Comments').execute();
   }
-
   async deleteAllCommentsLikes() {
-    const query = `DELETE FROM "CommentLikes"`;
-    await this.dataSource.query(query);
+    await this.dataSource.createQueryBuilder().delete().from('CommentLikes').execute();
   }
 }
 

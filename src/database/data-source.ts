@@ -12,7 +12,3 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: true,
 });
-
-// pnpm run build
-// pnpm run migration:generate
-// pnpm run migration:run

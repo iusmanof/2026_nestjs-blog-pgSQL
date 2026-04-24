@@ -116,7 +116,6 @@ export class SessionEntity {
       });
     }
     this.verifyRefreshToken(params.iat);
-    // this.verifyRefreshToken(params.iat);
     this.refreshTokenHash = await bcrypt.hash(params.newRefreshToken, 10);
     this.lastActiveDate = params.newIat;
     this.expiresAt = params.newExp;

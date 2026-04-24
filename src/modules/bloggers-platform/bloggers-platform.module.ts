@@ -40,6 +40,7 @@ import { UpdateCommentLikeStatusUseCase } from '@modules/bloggers-platform/comme
 import UsersRepository from '@user-accounts/infrastructure/users.repository';
 import BlogsSuperAdminPublicController from '@modules/bloggers-platform/blogs/api/controllers/blogs-sa-public.controller';
 import { TestEntity } from '@modules/bloggers-platform/test/test.entity';
+import PostsLikesRepository from '@modules/bloggers-platform/posts/infrastructure/post-like.repository';
 
 const controllers = [
   BlogsController,
@@ -57,6 +58,7 @@ const repositories = [
   PostsQueryRepository,
   CommentsRepository,
   CommentsQueryRepository,
+  PostsLikesRepository,
   UsersRepository,
 ];
 const useCases = [

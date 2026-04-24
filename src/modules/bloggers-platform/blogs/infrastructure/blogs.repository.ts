@@ -3,7 +3,6 @@ import { BlogsEntity } from '@modules/bloggers-platform/blogs/domain/blogs.entit
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
-import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
 
 @Injectable()
 class BlogsRepository {
@@ -18,15 +17,6 @@ class BlogsRepository {
 
   async findById(id: string): Promise<BlogsEntity | null> {
     return await this.dataSource.getRepository(BlogsEntity).findOne({ where: { id: id } });
-  }
-
-  async findById_DTO(id: string): Promise<BlogViewDto | null> {
-    return await this.dataSource
-      .createQueryBuilder()
-      .select(['b.id'])
-      .from(BlogsEntity, 'b')
-      .where('b.id = :id', { id })
-      .getOne();
   }
 
   async ensureCanDelete(id: string): Promise<number> {

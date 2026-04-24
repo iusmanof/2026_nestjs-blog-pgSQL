@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { BaseQueryParams } from '../../../../core/dto/base.query-params.dto';
+import { BaseQueryParams } from '@core/dto/base.query-params.dto';
 
 export enum UsersSortBy {
   CreatedAt = 'createdAt',

@@ -19,14 +19,11 @@ export class CommentLikesEntity {
 
   @Column({ type: 'uuid' })
   commentId: string;
-  // Comment
 
-  // User
   @ManyToOne(() => UsersEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: UsersEntity;
 
   @Column({ type: 'uuid' })
   userId: string;
-  // User
 }

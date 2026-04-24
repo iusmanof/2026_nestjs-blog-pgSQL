@@ -95,15 +95,6 @@ class UsersRepository {
       .execute();
   }
 
-  async updatePasswordHash(params: { id: string; passwordHash: string }): Promise<void> {
-    await this.dataSource
-      .createQueryBuilder()
-      .update('Users', 'u')
-      .set({ passwordHash: params.passwordHash })
-      .where('u.id = :id', { id: params.id })
-      .execute();
-  }
-
   async deleteAll() {
     await this.dataSource.createQueryBuilder().delete().from('Users').execute();
   }

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
-import { LikeStatus } from '@modules/bloggers-platform/posts/types/like-status.type';
 
 @Injectable()
 class PostsRepository {
@@ -29,18 +28,6 @@ class PostsRepository {
 
   async deleteAllPostLikes(): Promise<void> {
     await this.dataSource.createQueryBuilder().delete().from('PostLikes').execute();
-  }
-
-  // TODO use TypeORM
-  async setLikeStatus(userId: string, postId: string, status: LikeStatus): Promise<void> {
-    const query = `
-    INSERT INTO "PostLikes" ("postId","userId","status")
-    VALUES ($1,$2,$3)
-    ON CONFLICT ("postId","userId")
-    DO UPDATE SET "status" = EXCLUDED."status"
-  `;
-
-    await this.dataSource.query(query, [postId, userId, status]);
   }
 }
 

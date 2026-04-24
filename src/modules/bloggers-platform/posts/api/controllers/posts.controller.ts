@@ -9,7 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { CreatePostDto } from '../dto/create-post.dto';
+import { CreateUpdatePostDto, UpdatePostDto } from '../dto/create-update-post.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { BasicAuthGuard } from '@user-accounts/guards/basic/basic.guard';
 import { CreatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/create-post.usecase';
@@ -22,7 +22,6 @@ import { CommentViewDto } from '@modules/bloggers-platform/comments/api/dto/comm
 import { CreateCommentForPostCommand } from '@modules/bloggers-platform/comments/application/use-cases/create-comment-for-post.usecase';
 import { UpdateLikeStatusDto } from '@modules/bloggers-platform/posts/api/dto/update-like-status.dto';
 import { UpdateLikeStatusCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-like-status.usecase';
-import { UpdatePostDto } from '@modules/bloggers-platform/posts/api/dto/update-post.dto';
 
 @Controller('/posts')
 class PostsController {
@@ -31,7 +30,7 @@ class PostsController {
   @UseGuards(BasicAuthGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createPost(@Body() dto: CreatePostDto) {
+  async createPost(@Body() dto: CreateUpdatePostDto) {
     return await this.commandBus.execute<CreatePostCommand, PostViewDto>(
       new CreatePostCommand(dto),
     );
@@ -59,7 +58,6 @@ class PostsController {
     );
   }
 
-  // TODO DDD + TypeORM
   @UseGuards(JwtAuthGuard)
   @Put('/:postId/like-status')
   @HttpCode(HttpStatus.NO_CONTENT)

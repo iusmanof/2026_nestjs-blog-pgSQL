@@ -31,7 +31,6 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
   ) {}
 
   async execute(command: RefreshSessionCommand): Promise<RefreshSession> {
-    // check token
     if (!command.refreshToken) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
@@ -39,7 +38,6 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       });
     }
 
-    // verify token
     let payload: { deviceId: string; userId: string };
     try {
       payload = this.refreshJwt.verify(command.refreshToken, {
@@ -52,7 +50,6 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       });
     }
 
-    // take out session
     const session = await this.sessionRepository.findByDeviceId(payload.deviceId);
 
     if (!session) {
@@ -64,7 +61,6 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
 
     session?.assertOwnership(payload.userId);
 
-    // take out iat and exp
     const decoded = this.refreshJwt.decode<{ iat: number; exp: number }>(command.refreshToken);
 
     if (
@@ -89,7 +85,6 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
     const iatDate = new Date(decoded.iat * 1000);
     const expDate = new Date(decoded.exp * 1000);
 
-    // generate new refresh token
     const newRefreshToken: string = this.refreshJwt.sign({
       userId: user.userId,
       deviceId: session.deviceId,
@@ -108,10 +103,8 @@ export class RefreshSessionUseCase implements ICommandHandler<RefreshSessionComm
       newExp: newExp,
     });
 
-    // save session
     await this.sessionRepository.save(session);
 
-    // generate access token
     const accessToken = this.accessJwt.sign({ id: payload.deviceId });
 
     return { accessToken, newRefreshToken };

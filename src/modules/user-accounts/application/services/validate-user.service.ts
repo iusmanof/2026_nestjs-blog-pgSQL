@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CryptoService } from './crypto.service';
-import { UserContextDto } from '../dto/user-context.dto';
+import { UserContextDto } from '../../dto/user-context.dto';
 import UsersRepository from '@user-accounts/infrastructure/users.repository';
 
 @Injectable()
@@ -27,6 +27,7 @@ export class ValidateUserService {
 
     return {
       id: user.id.toString(),
+      login: user.login,
     };
   }
 }

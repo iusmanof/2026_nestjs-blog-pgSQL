@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
 import { CreateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/create-blog.dto';
 import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/update-blog.dto';
@@ -17,6 +17,7 @@ export class BlogsEntity {
   @Column({ type: 'varchar', nullable: false })
   websiteUrl: string;
 
+  @Index()
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
@@ -26,7 +27,6 @@ export class BlogsEntity {
   @OneToMany(() => PostsEntity, (post) => post.blog)
   posts: PostsEntity[];
 
-  // fabric
   static create(dto: CreateBlogDto) {
     const blog = new BlogsEntity();
 
@@ -53,14 +53,12 @@ export class BlogsEntity {
     }
   }
 
-  // invariant
   private validateBlog() {
     if (!this.name || this.name.length < 1) {
       throw new Error('Name cannot be empty');
     }
   }
 
-  // getters
   getId() {
     return this.id;
   }

@@ -52,7 +52,6 @@ export class LogoutUseCase implements ICommandHandler<LogoutCommand> {
       });
     }
 
-    // КРИТИЧНО: проверка iat === lastActiveDate
     const tokenIatDate = new Date(payload.iat * 1000);
 
     if (session.lastActiveDate.toISOString() !== tokenIatDate.toISOString()) {

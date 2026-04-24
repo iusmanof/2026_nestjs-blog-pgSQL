@@ -15,7 +15,6 @@ export class GetBlogByIdQuery {
 export class GetBlogByIdQueryHandler implements IQueryHandler<GetBlogByIdQuery> {
   constructor(private readonly blogQueryRepository: BlogQueryRepository) {}
   async execute(query: GetBlogByIdQuery): Promise<BlogViewDto> {
-    // const entity = await this.blogQueryRepository.findOrNotFoundFail(query.id);
     const blog = await this.blogQueryRepository.findById(query.id);
     if (!blog) {
       throw new DomainException({

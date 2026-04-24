@@ -1,9 +1,18 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BlogsEntity } from '@modules/bloggers-platform/blogs/domain/blogs.entity';
 import { CommentsEntity } from '@modules/bloggers-platform/comments/domain/comment.entity';
 import { CreatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/create-post-for-blog.dto';
-import { UpdatePostDto } from '@modules/bloggers-platform/posts/api/dto/update-post.dto';
+import { UpdatePostDto } from '@modules/bloggers-platform/posts/api/dto/create-update-post.dto';
 
+@Index(['blogId', 'createdAt'])
 @Entity({ name: 'Posts' })
 export class PostsEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -75,14 +84,12 @@ export class PostsEntity {
     }
   }
 
-  // invariant
   private validatePost() {
     if (!this.title || this.title.length < 1) {
       throw new Error('Title cannot be empty');
     }
   }
 
-  // getters
   getTitle() {
     return this.title;
   }

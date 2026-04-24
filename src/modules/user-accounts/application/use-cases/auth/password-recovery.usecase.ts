@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PasswordRecoveryDto } from '../../../api/dto/password-recovery.dto';
 import { EmailService } from '@modules/notification/email.service';
-import { CodeGeneratorService } from '../../code-generator.service';
+import { CodeGeneratorService } from '../../services/code-generator.service';
 import EmailConfirmationRepository from '../../../infrastructure/email-confirmation.repository';
 import { DomainException } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';

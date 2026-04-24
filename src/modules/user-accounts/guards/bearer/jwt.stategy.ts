@@ -5,13 +5,14 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { UsersQueryRepository } from '../../infrastructure/users.query-repository';
 import { UserContextDto } from '../../dto/user-context.dto';
 import SessionRepository from '@user-accounts/infrastructure/session.repository';
+import { DomainException } from '@core/exceptions/filters/domain-exceptions';
+import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly configService: ConfigService,
     private readonly usersQueryRepository: UsersQueryRepository,
-    private readonly sessionRepository: SessionRepository,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -21,9 +22,19 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: UserContextDto): Promise<UserContextDto> {
-    const device = await this.sessionRepository.findByDeviceId(payload.id);
+    const user = await this.usersQueryRepository.findById(payload.id);
+
+    if (!user) {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'User not found',
+        extensions: [{ field: 'id', message: 'User not found' }],
+      });
+    }
+
     return {
-      id: device!.userId.toString(),
+      id: user.userId.toString(),
+      login: user.login,
     };
   }
 }
