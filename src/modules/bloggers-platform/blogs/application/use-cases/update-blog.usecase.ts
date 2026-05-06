@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UpdateBlogDto } from '../../api/dto/update-blog.dto';
+import { UpdateBlogDto } from '../../api/dto/input/update-blog.dto';
 import BlogsRepository from '../../infrastructure/blogs.repository';
 import { DomainException, Extension } from '@core/exceptions/filters/domain-exceptions';
 import { DomainExceptionCode } from '@core/exceptions/filters/domain-exception-codes';

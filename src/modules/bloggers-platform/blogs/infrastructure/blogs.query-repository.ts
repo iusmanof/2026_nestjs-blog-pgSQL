@@ -7,7 +7,7 @@ import {
   BlogsSortBy,
 } from '@modules/bloggers-platform/blogs/api/dto/blogs-query-params.dto';
 import { SortDirection } from '@core/dto/base.query-params.dto';
-import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
+import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/view/blog-view.dto';
 
 @Injectable()
 class BlogsQueryRepository {

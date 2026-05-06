@@ -1,7 +1,7 @@
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { PostsEntity } from '@modules/bloggers-platform/posts/domain/post.entity';
-import { CreateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/create-blog.dto';
-import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/update-blog.dto';
+import { CreateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/input/create-blog.dto';
+import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/input/update-blog.dto';
 
 @Entity({ name: 'Blogs' })
 export class BlogsEntity {

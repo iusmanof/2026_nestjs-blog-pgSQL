@@ -38,9 +38,9 @@ import { UpdateLikeStatusUseCase } from '@modules/bloggers-platform/posts/applic
 import CommentsQueryRepository from '@modules/bloggers-platform/comments/infrastructire/comments.query-repository';
 import { UpdateCommentLikeStatusUseCase } from '@modules/bloggers-platform/comments/application/use-cases/update-comment-like-status.usecase';
 import UsersRepository from '@user-accounts/infrastructure/users.repository';
-import BlogsSuperAdminPublicController from '@modules/bloggers-platform/blogs/api/controllers/blogs-sa-public.controller';
 import { TestEntity } from '@modules/bloggers-platform/test/test.entity';
 import PostsLikesRepository from '@modules/bloggers-platform/posts/infrastructure/post-like.repository';
+import BlogsSuperAdminPublicController from './blogs/api/controllers/blogs-sa.controller';
 
 const controllers = [
   BlogsController,

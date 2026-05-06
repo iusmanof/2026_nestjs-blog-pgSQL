@@ -9,18 +9,19 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { CreateBlogDto } from '../dto/create-blog.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { BasicAuthGuard } from '@user-accounts/guards/basic/basic.guard';
-import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/blog-view.dto';
+import { BlogViewDto } from '@modules/bloggers-platform/blogs/api/dto/view/blog-view.dto';
 import { CreateBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/create-blog.usecase';
-import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/update-blog.dto';
+import { UpdateBlogDto } from '@modules/bloggers-platform/blogs/api/dto/input/update-blog.dto';
 import { UpdateBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/update-blog.usecase';
 import { DeleteBlogCommand } from '@modules/bloggers-platform/blogs/application/use-cases/delete-blog-use.case';
 import { CreatePostForBlogDto } from '@modules/bloggers-platform/posts/api/dto/create-post-for-blog.dto';
 import { CreatePostForBlogCommand } from '@modules/bloggers-platform/posts/application/use-cases/create-post-for-blog.usecase';
 import { UpdatePostCommand } from '@modules/bloggers-platform/posts/application/use-cases/update-post.usecase';
 import { DeletePostCommand } from '@modules/bloggers-platform/blogs/application/use-cases/delete-post.usecase-specified-by-id';
+
+class CreateBlogRequestDto extends CreateBlogCommand {}
 
 @UseGuards(BasicAuthGuard)
 @Controller('/sa/blogs')
@@ -29,7 +30,7 @@ class BlogsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createBlog(@Body() dto: CreateBlogDto): Promise<BlogViewDto> {
+  async createBlog(@Body() dto: CreateBlogRequestDto): Promise<BlogViewDto> {
     return await this.commandBus.execute<CreateBlogCommand, BlogViewDto>(
       new CreateBlogCommand(dto),
     );

@@ -20,6 +20,11 @@ class PostsQueryRepository {
   ) {}
 
   // TODO можно ли так сделать в queryRepository
+  // не Entity ...  ViewDto или
+  // DTO ≠ Entity — не путай, маппинг делай явно.
+  // Разделяй DTO и entity. DTO — это «то, что пришло от клиента» или «то, что мы отдаём».
+  // Entity — это «то, что хранится в БД». Не инжекть DTO прямо в базу, даже если поля совпадают.
+  // Пусть маппинг происходит явно — через сервисы или фабричные методы на entity.
   async findById(id: string): Promise<PostsEntity | null> {
     return await this.dataSource.getRepository(PostsEntity).findOne({ where: { id: id } });
   }
